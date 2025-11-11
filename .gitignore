@@ -24,6 +24,9 @@ yarn-error.log*
 # Coverage
 coverage/
 
+# Test results
+test-results/
+
 # TypeScript
 *.tsbuildinfo
 

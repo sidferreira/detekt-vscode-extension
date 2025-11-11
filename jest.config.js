@@ -13,4 +13,18 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   testTimeout: 30000,
   setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
+  reporters: [
+    'default',
+    [
+      'jest-junit',
+      {
+        outputDirectory: './test-results',
+        outputName: 'junit.xml',
+        classNameTemplate: '{classname}',
+        titleTemplate: '{title}',
+        ancestorSeparator: ' › ',
+        usePathAsClassName: false,
+      },
+    ],
+  ],
 };

@@ -1,0 +1,73 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install detekt
+        run: |
+          curl -sSLO https://github.com/detekt/detekt/releases/download/v1.23.6/detekt-cli-1.23.6-all.jar
+          mkdir -p ~/.local/bin
+          cat > ~/.local/bin/detekt << 'EOF'
+          #!/bin/bash
+          java -jar ~/.detekt/detekt-cli-1.23.6-all.jar "$@"
+          EOF
+          chmod +x ~/.local/bin/detekt
+          mkdir -p ~/.detekt
+          mv detekt-cli-1.23.6-all.jar ~/.detekt/
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test -- --coverage --testResultsProcessor=jest-junit
+        env:
+          JUNIT_SUITE_NAME: Jest Tests
+          JUNIT_OUTPUT_DIR: ./test-results
+
+      - name: Upload test results
+        uses: dorny/test-reporter@v1
+        with:
+          name: Jest Tests - Node ${{ matrix.node-version }}
+          path: 'test-results/junit.xml'
+          reporter: 'jest-junit'
+        if: always()
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-coverage
+          fail_ci_if_error: false
+        if: always()
+
+      - name: Comment coverage on PR
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          lcov-file: ./coverage/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name == 'pull_request' && always()
