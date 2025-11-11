@@ -140,7 +140,7 @@ async function runDetekt(workspacePath: string, specificFile?: string): Promise<
     }
 }
 
-function parseDetektOutput(output: string, workspacePath: string): Map<vscode.Uri, vscode.Diagnostic[]> {
+export function parseDetektOutput(output: string, workspacePath: string): Map<vscode.Uri, vscode.Diagnostic[]> {
     const diagnosticsMap = new Map<vscode.Uri, vscode.Diagnostic[]>();
     
     // Pattern: file.kt:line:column: message [RuleId]

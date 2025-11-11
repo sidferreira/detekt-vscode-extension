@@ -71,7 +71,7 @@
     "copy-fixtures": "mkdir -p dist/test/fixtures && cp test/fixtures/*.kt dist/test/fixtures/",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
-    "test": "jest",
+    "test": "yarn compile && jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:vscode": "node ./dist/test/run-test.js"
