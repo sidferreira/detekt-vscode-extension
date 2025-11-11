@@ -16,10 +16,18 @@
     "linter",
     "code analysis"
   ],
-  "activationEvents": [
-    "onLanguage:kotlin",
-    "onCommand:detekt.runAnalysis"
-  ],
+  "publisher": "your-publisher-name",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sidferreira/detekt-vscode-extension"
+  },
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -45,6 +53,14 @@
           "type": "string",
           "default": "detekt",
           "description": "Path to the detekt executable"
+        },
+        "detekt.args": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional arguments to pass to detekt"
         }
       }
     }

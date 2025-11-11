@@ -1,14 +1,16 @@
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 
-const execAsync = promisify(exec);
-
 let diagnosticCollection: vscode.DiagnosticCollection;
+let outputChannel: vscode.OutputChannel;
+let runningProcess: ChildProcess | null = null;
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Detekt extension is now active');
+    outputChannel = vscode.window.createOutputChannel('Detekt');
+    context.subscriptions.push(outputChannel);
+    
+    outputChannel.appendLine('Detekt extension is now active');
 
     // Create diagnostic collection
     diagnosticCollection = vscode.languages.createDiagnosticCollection('detekt');
@@ -48,6 +50,14 @@ export function activate(context: vscode.ExtensionContext) {
 async function runDetekt(workspacePath: string, specificFile?: string): Promise<void> {
     const config = vscode.workspace.getConfiguration('detekt');
     const detektPath = config.get<string>('executablePath', 'detekt');
+    const extraArgs = config.get<string[]>('args', []);
+
+    // Cancel any running process
+    if (runningProcess) {
+        outputChannel.appendLine('Cancelling previous detekt run...');
+        runningProcess.kill();
+        runningProcess = null;
+    }
 
     // Clear previous diagnostics
     if (specificFile) {
@@ -57,26 +67,53 @@ async function runDetekt(workspacePath: string, specificFile?: string): Promise<
     }
 
     const statusBarMessage = vscode.window.setStatusBarMessage('$(sync~spin) Running detekt...');
+    
+    const targetPath = specificFile || workspacePath;
+    outputChannel.appendLine(`Running detekt on: ${targetPath}`);
 
     try {
-        // Build detekt command
-        let command = `${detektPath} --input "${workspacePath}"`;
+        // Build detekt arguments: just pass the path (file or project root)
+        const args = [targetPath, ...extraArgs];
         
-        // Add specific file if provided
-        if (specificFile) {
-            command = `${detektPath} --input "${specificFile}"`;
-        }
+        outputChannel.appendLine(`Command: ${detektPath} ${args.join(' ')}`);
 
-        // Add plain output format for easier parsing
-        command += ' --report txt';
+        // Spawn detekt process
+        const detektProcess = spawn(detektPath, args, {
+            cwd: workspacePath
+        });
+        
+        runningProcess = detektProcess;
 
-        const { stdout, stderr } = await execAsync(command, {
-            cwd: workspacePath,
-            maxBuffer: 1024 * 1024 * 10 // 10MB buffer
+        let stdout = '';
+        let stderr = '';
+
+        detektProcess.stdout.on('data', (data: any) => {
+            stdout += data.toString();
+        });
+
+        detektProcess.stderr.on('data', (data: any) => {
+            stderr += data.toString();
+        });
+
+        await new Promise<void>((resolve, reject) => {
+            detektProcess.on('close', (code: number | null) => {
+                runningProcess = null;
+                outputChannel.appendLine(`Detekt process exited with code: ${code}`);
+                // detekt returns non-zero exit code when issues are found
+                // We treat this as success and parse the output
+                resolve();
+            });
+
+            detektProcess.on('error', (error: Error) => {
+                runningProcess = null;
+                outputChannel.appendLine(`Detekt process error: ${error.message}`);
+                reject(error);
+            });
         });
 
         // Parse detekt output
-        const diagnosticsMap = parseDetektOutput(stdout + stderr, workspacePath);
+        const output = stdout + stderr;
+        const diagnosticsMap = parseDetektOutput(output, workspacePath);
 
         // Apply diagnostics
         diagnosticsMap.forEach((diagnostics, uri) => {
@@ -86,6 +123,8 @@ async function runDetekt(workspacePath: string, specificFile?: string): Promise<
         const issueCount = Array.from(diagnosticsMap.values())
             .reduce((sum, diags) => sum + diags.length, 0);
 
+        outputChannel.appendLine(`Found ${issueCount} issue(s)`);
+
         if (issueCount > 0) {
             vscode.window.showInformationMessage(`Detekt found ${issueCount} issue(s)`);
         } else {
@@ -93,25 +132,10 @@ async function runDetekt(workspacePath: string, specificFile?: string): Promise<
         }
 
     } catch (error: any) {
-        // detekt returns non-zero exit code when issues are found
-        if (error.stdout || error.stderr) {
-            const diagnosticsMap = parseDetektOutput(error.stdout + error.stderr, workspacePath);
-            
-            diagnosticsMap.forEach((diagnostics, uri) => {
-                diagnosticCollection.set(uri, diagnostics);
-            });
-
-            const issueCount = Array.from(diagnosticsMap.values())
-                .reduce((sum, diags) => sum + diags.length, 0);
-
-            if (issueCount > 0) {
-                vscode.window.showInformationMessage(`Detekt found ${issueCount} issue(s)`);
-            }
-        } else {
-            vscode.window.showErrorMessage(`Detekt error: ${error.message}`);
-            console.error('Detekt execution error:', error);
-        }
+        outputChannel.appendLine(`Detekt error: ${error.message}`);
+        vscode.window.showErrorMessage(`Detekt error: ${error.message}`);
     } finally {
+        runningProcess = null;
         statusBarMessage.dispose();
     }
 }
@@ -126,11 +150,16 @@ function parseDetektOutput(output: string, workspacePath: string): Map<vscode.Ur
     while ((match = pattern.exec(output)) !== null) {
         const [, filePath, lineStr, columnStr, message, code] = match;
         
-        // Convert to absolute path if relative
-        let absolutePath = filePath;
-        if (!path.isAbsolute(filePath)) {
-            absolutePath = path.join(workspacePath, filePath);
+        // Remove project root from path to make it relative
+        let relativePath = filePath;
+        if (filePath.startsWith(workspacePath)) {
+            relativePath = path.relative(workspacePath, filePath);
         }
+        
+        // Convert to absolute path for URI
+        const absolutePath = path.isAbsolute(relativePath) 
+            ? relativePath 
+            : path.join(workspacePath, relativePath);
         
         const uri = vscode.Uri.file(absolutePath);
         const line = parseInt(lineStr, 10) - 1; // VSCode uses 0-based line numbers
@@ -161,8 +190,18 @@ function parseDetektOutput(output: string, workspacePath: string): Map<vscode.Ur
 }
 
 export function deactivate() {
+    // Cancel any running process
+    if (runningProcess) {
+        runningProcess.kill();
+        runningProcess = null;
+    }
+    
     if (diagnosticCollection) {
         diagnosticCollection.clear();
         diagnosticCollection.dispose();
+    }
+    
+    if (outputChannel) {
+        outputChannel.dispose();
     }
 }

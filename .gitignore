@@ -1,0 +1,42 @@
+# Node
+node_modules/
+
+# Build output
+out/
+dist/
+build/
+
+# VS Code
+.vscode/
+.vscode-test/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+
+# VSIX packages
+*.vsix
+
+# Coverage
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Maps
+*.map
+
+# Env
+.env
+
+# Misc
+.idea/
+*.log
+
+# Keep README and CHANGELOG
+!README.md
+!CHANGELOG.md

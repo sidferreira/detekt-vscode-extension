@@ -21,8 +21,9 @@ Simply save any Kotlin file (`.kt`) and detekt will run automatically.
 
 ## Requirements
 
-- [detekt](https://detekt.dev/) must be installed and available in your PATH or in your project
-- detekt CLI should output in the format: `file.kt:line:column: message [RuleId]`
+- **detekt must be installed globally** or available in your PATH
+- The extension assumes you have a working `detekt` command (or you can configure a custom path in settings)
+- Detekt CLI should output in the format: `file.kt:line:column: message [RuleId]`
 
 ## Configuration
 
@@ -32,9 +33,19 @@ The extension uses the detekt configuration from your project root (`detekt.yml`
 
 This extension contributes the following settings:
 
-* `detekt.enable`: Enable/disable the detekt extension
-* `detekt.runOnSave`: Run detekt automatically when saving Kotlin files
-* `detekt.executablePath`: Path to the detekt executable (defaults to 'detekt')
+* `detekt.enable`: Enable/disable the detekt extension (default: `true`)
+* `detekt.runOnSave`: Run detekt automatically when saving Kotlin files (default: `true`)
+* `detekt.executablePath`: Path to the detekt executable or command (default: `"detekt"`)
+* `detekt.args`: Additional arguments to pass to detekt (default: `[]`)
+
+### Example Configuration
+
+```json
+{
+  "detekt.executablePath": "/usr/local/bin/detekt",
+  "detekt.args": ["--config", "custom-detekt.yml", "--parallel"]
+}
+```
 
 ## Release Notes
 
