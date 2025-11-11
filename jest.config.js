@@ -1,17 +1,16 @@
 module.exports = {
-  preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/src'],
+  roots: ['<rootDir>/test'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.(t|j)sx?$': '@swc-node/jest',
   },
   collectCoverageFrom: [
     'src/**/*.ts',
-    '!src/test/**',
+    '!test/**',
     '!src/**/*.d.ts',
   ],
   moduleFileExtensions: ['ts', 'js', 'json'],
   testTimeout: 30000,
-  setupFilesAfterEnv: ['<rootDir>/src/test/jest-setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
 };

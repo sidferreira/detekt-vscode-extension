@@ -1,33 +1,28 @@
-import * as assert from 'assert';
+
 import { spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 
-suite('Detekt Test Suite', () => {
-    const fixturesPath = path.resolve(__dirname, '../fixtures');
+describe('Detekt Test Suite', () => {
+    const fixturesPath = path.resolve(__dirname, './fixtures');
     const badExamplePath = path.join(fixturesPath, 'bad-example.kt');
     
-    test('Detekt is installed and accessible', async function() {
-        this.timeout(10000);
-        
+    test('Detekt is installed and accessible', async () => {
         const version = await getDetektVersion();
-        assert.ok(version.length > 0, 'Detekt should return version info');
+        expect(version.length > 0).toBeTruthy(); // 'Detekt should return version info'
         console.log('Detekt version:', version);
-    });
+    }, 10000);
 
-    test('Run detekt on bad example and parse output', async function() {
-        this.timeout(30000);
-        
+    test('Run detekt on bad example and parse output', async () => {
         // Skip if detekt not installed
         const isInstalled = await checkDetektInstalled();
         if (!isInstalled) {
             console.log('Skipping: detekt not installed. Install with: curl -sSLO https://github.com/detekt/detekt/releases/download/v1.23.4/detekt-cli-1.23.4.zip && unzip detekt-cli-1.23.4.zip && sudo cp detekt-cli-1.23.4/bin/detekt /usr/local/bin/');
-            this.skip();
             return;
         }
 
         // Verify fixture exists
-        assert.ok(fs.existsSync(badExamplePath), 'Test fixture bad-example.kt should exist');
+        expect(fs.existsSync(badExamplePath)).toBeTruthy(); // 'Test fixture bad-example.kt should exist'
 
         // Run detekt on the fixture
         const output = await runDetekt(badExamplePath);
@@ -42,16 +37,12 @@ suite('Detekt Test Suite', () => {
         console.log('Diagnostics:', Array.from(diagnosticsMap.entries()));
         
         // We expect at least the file to appear in output
-        assert.ok(output.includes('bad-example.kt') || output.includes('.kt'), 
-            'Output should reference the Kotlin file');
-    });
+        expect(output.includes('bad-example.kt') || output.includes('.kt')).toBeTruthy();
+    }, 30000);
 
-    test('Parse real detekt output format', async function() {
-        this.timeout(30000);
-        
+    test('Parse real detekt output format', async () => {
         const isInstalled = await checkDetektInstalled();
         if (!isInstalled) {
-            this.skip();
             return;
         }
 
@@ -70,8 +61,8 @@ suite('Detekt Test Suite', () => {
         });
         
         // Just verify parsing doesn't crash
-        assert.ok(true, 'Parsing should complete without errors');
-    });
+        expect(true).toBeTruthy(); // 'Parsing should complete without errors'
+    }, 30000);
 });
 
 function checkDetektInstalled(): Promise<boolean> {
@@ -92,7 +83,7 @@ async function getDetektVersion(): Promise<string> {
 
 function runDetekt(filePath: string): Promise<string> {
     return new Promise((resolve, reject) => {
-        const detektProcess = spawn('detekt', [filePath]);
+        const detektProcess = spawn('detekt', ['--input', filePath]);
         
         let stdout = '';
         let stderr = '';
