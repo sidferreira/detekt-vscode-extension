@@ -67,14 +67,12 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./ && npm run copy-fixtures",
-    "copy-fixtures": "mkdir -p dist/test/fixtures && cp test/fixtures/*.kt dist/test/fixtures/",
+    "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
     "test": "yarn compile && jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:vscode": "node ./dist/test/run-test.js"
+    "test:coverage": "jest --coverage"
   },
   "devDependencies": {
     "@swc-node/jest": "^1.9.1",

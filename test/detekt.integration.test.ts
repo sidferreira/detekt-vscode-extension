@@ -3,6 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { EventEmitter } from 'events';
 
+// Keep the original spawn for test utilities
+
 // Create comprehensive VS Code mocks for integration testing
 const mockDiagnosticCollection = {
     clear: jest.fn(),
@@ -34,7 +36,7 @@ const mockConfiguration = {
             case 'enable': return true;
             case 'runOnSave': return true;
             case 'executablePath': return 'detekt';
-            case 'args': return ['--input'];
+            case 'args': return [];
             default: return defaultValue;
         }
     })
@@ -50,10 +52,7 @@ const mockVscode = {
         workspaceFolders: mockWorkspaceFolders,
         getConfiguration: jest.fn(() => mockConfiguration),
         getWorkspaceFolder: jest.fn(() => mockWorkspaceFolders[0]),
-        onDidSaveTextDocument: jest.fn((callback) => {
-            saveEventEmitter.on('didSave', callback);
-            return { dispose: () => saveEventEmitter.removeListener('didSave', callback) };
-        })
+        onDidSaveTextDocument: jest.fn()
     },
     window: {
         createOutputChannel: jest.fn(() => mockOutputChannel),
@@ -128,6 +127,10 @@ describe('Detekt Integration Test Suite', () => {
         mockDiagnosticCollection.set.mockClear();
         mockOutputChannel.appendLine.mockClear();
         (global as any).mockCommands = {};
+        
+        // Reload the extension module for clean state
+        delete require.cache[require.resolve('../dist/extensions.js')];
+        extensionModule = require('../dist/extensions.js');
     });
 
     test('Extension activates without errors', () => {
@@ -181,7 +184,7 @@ describe('Detekt Integration Test Suite', () => {
         expect(firstDiagnostic.source).toBe('detekt');
     }, 30000);
 
-    test.skip('Save event triggers detekt analysis via compiled extension', async () => {
+    test('Save event triggers real detekt analysis via compiled extension', async () => {
         // Skip if detekt not installed
         const isInstalled = await checkDetektInstalled();
         if (!isInstalled) {
@@ -189,40 +192,52 @@ describe('Detekt Integration Test Suite', () => {
         }
 
         // Clear any previous calls
+        jest.clearAllMocks();
         mockDiagnosticCollection.set.mockClear();
+        mockDiagnosticCollection.delete.mockClear();
+        mockOutputChannel.appendLine.mockClear();
         
-        // Activate extension
+        // Store the save event handler that will be registered
+        let saveEventHandler: any = null;
+        
+        // Mock the onDidSaveTextDocument to capture the handler
+        const mockOnSave = jest.fn((callback) => {
+            saveEventHandler = callback;
+            return { dispose: () => {} };
+        });
+        mockVscode.workspace.onDidSaveTextDocument = mockOnSave;
+        
+        // Activate extension (this will register the save handler)
         extensionModule.activate(mockContext);
+        
+        // Verify the handler was registered
+        expect(saveEventHandler).toBeDefined();
+        expect(mockVscode.workspace.onDidSaveTextDocument).toHaveBeenCalled();
 
         // Create a mock document for a Kotlin file that actually exists
         const fixturesPath = path.resolve(__dirname, 'fixtures');
-        const kotinFilePath = path.join(fixturesPath, 'bad-example.kt');
+        const kotlinFilePath = path.join(fixturesPath, 'bad-example.kt');
+        
+        // Verify the fixture file exists
+        expect(fs.existsSync(kotlinFilePath)).toBe(true);
         
         const mockDocument = {
             languageId: 'kotlin',
-            fileName: kotinFilePath,
-            uri: mockVscode.Uri.file(kotinFilePath)
+            fileName: kotlinFilePath,
+            uri: mockVscode.Uri.file(kotlinFilePath)
         };
 
-        // Create a promise to wait for the diagnostic collection to be called
-        let diagnosticsSetPromise = new Promise<void>((resolve) => {
-            const originalSet = mockDiagnosticCollection.set;
-            mockDiagnosticCollection.set = jest.fn((...args) => {
-                originalSet.apply(mockDiagnosticCollection, args);
-                resolve();
-            });
-        });
+        // Call the save handler directly with the mock document
+        // This will trigger the real detekt execution inside the extension
+        const saveHandlerPromise = saveEventHandler(mockDocument);
 
-        // Simulate save event
-        saveEventEmitter.emit('didSave', mockDocument);
+        // Wait for the save handler to complete (which includes detekt subprocess execution)
+        await saveHandlerPromise;
 
-        // Wait for diagnostics to be set (with timeout)
-        await Promise.race([
-            diagnosticsSetPromise,
-            new Promise(resolve => setTimeout(resolve, 10000))
-        ]);
+        // Give a small delay to ensure all mock calls are recorded
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Verify that diagnostics were set
+        // Verify that detekt analysis was triggered and diagnostics were set
         expect(mockDiagnosticCollection.set).toHaveBeenCalled();
         
         // Get the diagnostics that were set
@@ -231,7 +246,23 @@ describe('Detekt Integration Test Suite', () => {
         
         const [uri, diagnostics] = setCalls[0];
         expect(uri).toBeDefined();
+        expect(uri.fsPath).toBe(kotlinFilePath);
         expect(Array.isArray(diagnostics)).toBe(true);
+        expect(diagnostics.length).toBeGreaterThan(0);
+        
+        // Verify diagnostic structure from real detekt output
+        const firstDiagnostic = diagnostics[0];
+        expect(firstDiagnostic).toHaveProperty('range');
+        expect(firstDiagnostic).toHaveProperty('message');
+        expect(firstDiagnostic).toHaveProperty('code');
+        expect(firstDiagnostic.source).toBe('detekt');
+        
+        // Verify that the output channel was used
+        expect(mockOutputChannel.appendLine).toHaveBeenCalled();
+        
+        // Check that the status bar message was created and disposed
+        expect(mockVscode.window.setStatusBarMessage).toHaveBeenCalledWith('$(sync~spin) Running detekt...');
+        expect(mockStatusBarMessage.dispose).toHaveBeenCalled();
     }, 30000);
 
     test('Manual run command works via compiled extension', async () => {

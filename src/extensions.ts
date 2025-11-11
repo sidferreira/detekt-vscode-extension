@@ -72,8 +72,8 @@ async function runDetekt(workspacePath: string, specificFile?: string): Promise<
     outputChannel.appendLine(`Running detekt on: ${targetPath}`);
 
     try {
-        // Build detekt arguments: just pass the path (file or project root)
-        const args = [targetPath, ...extraArgs];
+        // Build detekt arguments: use --input flag to specify the path
+        const args = ['--input', targetPath, ...extraArgs];
         
         outputChannel.appendLine(`Command: ${detektPath} ${args.join(' ')}`);
 
