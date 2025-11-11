@@ -1,13 +1,9 @@
-import * as assert from 'assert';
-import * as vscode from 'vscode';
-import { spawn } from 'child_process';
 import * as path from 'path';
 import { EventEmitter } from 'events';
+import * as vscode from '../mocks/vscode-mock';
 
-suite('Unit Test Suite', () => {
-    vscode.window.showInformationMessage('Start unit tests.');
-
-    test('Parse detekt output with single issue', async () => {
+describe('Unit Test Suite', () => {
+    test('Parse detekt output with single issue', () => {
         const workspacePath = '/workspace/test-project';
         const detektOutput = `
 src/main/kotlin/Example.kt:10:5: Magic number detected [MagicNumber]
@@ -15,17 +11,17 @@ src/main/kotlin/Example.kt:10:5: Magic number detected [MagicNumber]
 
         const diagnosticsMap = parseDetektOutputTest(detektOutput, workspacePath);
 
-        assert.strictEqual(diagnosticsMap.size, 1);
+        expect(diagnosticsMap.size).toBe(1);
         const diagnostics = Array.from(diagnosticsMap.values())[0];
-        assert.strictEqual(diagnostics.length, 1);
-        assert.strictEqual(diagnostics[0].message, 'Magic number detected');
-        assert.strictEqual(diagnostics[0].code, 'MagicNumber');
-        assert.strictEqual(diagnostics[0].source, 'detekt');
-        assert.strictEqual(diagnostics[0].range.start.line, 9); // 0-based
-        assert.strictEqual(diagnostics[0].range.start.character, 4); // 0-based
+        expect(diagnostics.length).toBe(1);
+        expect(diagnostics[0].message).toBe('Magic number detected');
+        expect(diagnostics[0].code).toBe('MagicNumber');
+        expect(diagnostics[0].source).toBe('detekt');
+        expect(diagnostics[0].range.start.line).toBe(9); // 0-based
+        expect(diagnostics[0].range.start.character).toBe(4); // 0-based
     });
 
-    test('Parse detekt output with multiple issues', async () => {
+    test('Parse detekt output with multiple issues', () => {
         const workspacePath = '/workspace/test-project';
         const detektOutput = `
 src/main/kotlin/Example.kt:10:5: Magic number detected [MagicNumber]
@@ -35,43 +31,43 @@ src/main/kotlin/Helper.kt:5:1: Missing documentation [UndocumentedPublicClass]
 
         const diagnosticsMap = parseDetektOutputTest(detektOutput, workspacePath);
 
-        assert.strictEqual(diagnosticsMap.size, 2);
+        expect(diagnosticsMap.size).toBe(2);
         
         const exampleDiagnostics = Array.from(diagnosticsMap.values())[0];
-        assert.strictEqual(exampleDiagnostics.length, 2);
+        expect(exampleDiagnostics.length).toBe(2);
         
         const helperDiagnostics = Array.from(diagnosticsMap.values())[1];
-        assert.strictEqual(helperDiagnostics.length, 1);
-        assert.strictEqual(helperDiagnostics[0].code, 'UndocumentedPublicClass');
+        expect(helperDiagnostics.length).toBe(1);
+        expect(helperDiagnostics[0].code).toBe('UndocumentedPublicClass');
     });
 
-    test('Parse detekt output with absolute paths', async () => {
+    test('Parse detekt output with absolute paths', () => {
         const workspacePath = '/workspace/test-project';
-        const detektOutput = `/workspace/test-project/src/main/kotlin/Example.kt:10:5: Magic number detected [MagicNumber]`;
+        const detektOutput = '/workspace/test-project/src/main/kotlin/Example.kt:10:5: Magic number detected [MagicNumber]';
 
         const diagnosticsMap = parseDetektOutputTest(detektOutput, workspacePath);
 
-        assert.strictEqual(diagnosticsMap.size, 1);
+        expect(diagnosticsMap.size).toBe(1);
         const uriKey = Array.from(diagnosticsMap.keys())[0];
-        assert.ok(uriKey.fsPath.endsWith('src/main/kotlin/Example.kt') || uriKey.fsPath.includes('Example.kt'));
+        expect(uriKey.fsPath.includes('Example.kt')).toBe(true);
     });
 
-    test('Parse empty detekt output', async () => {
+    test('Parse empty detekt output', () => {
         const workspacePath = '/workspace/test-project';
         const detektOutput = '';
 
         const diagnosticsMap = parseDetektOutputTest(detektOutput, workspacePath);
 
-        assert.strictEqual(diagnosticsMap.size, 0);
+        expect(diagnosticsMap.size).toBe(0);
     });
 
-    test('Parse detekt output with no issues', async () => {
+    test('Parse detekt output with no issues', () => {
         const workspacePath = '/workspace/test-project';
         const detektOutput = 'detekt completed successfully with 0 issues';
 
         const diagnosticsMap = parseDetektOutputTest(detektOutput, workspacePath);
 
-        assert.strictEqual(diagnosticsMap.size, 0);
+        expect(diagnosticsMap.size).toBe(0);
     });
 
     test('Mock spawn detekt process with success', (done) => {
@@ -91,7 +87,7 @@ src/main/kotlin/Helper.kt:5:1: Missing documentation [UndocumentedPublicClass]
             mockProcess.stdout.emit('data', Buffer.from(mockOutput));
             mockProcess.emit('close', 0);
             
-            assert.ok(stdoutData.includes('MagicNumber'));
+            expect(stdoutData.includes('MagicNumber')).toBe(true);
             done();
         }, 10);
     });
@@ -141,7 +137,10 @@ function parseDetektOutputTest(output: string, workspacePath: string): Map<vscod
         if (!diagnosticsMap.has(uri)) {
             diagnosticsMap.set(uri, []);
         }
-        diagnosticsMap.get(uri)!.push(diagnostic);
+        const diagnostics = diagnosticsMap.get(uri);
+        if (diagnostics) {
+            diagnostics.push(diagnostic);
+        }
     }
     
     return diagnosticsMap;

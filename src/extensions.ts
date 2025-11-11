@@ -183,7 +183,10 @@ function parseDetektOutput(output: string, workspacePath: string): Map<vscode.Ur
         if (!diagnosticsMap.has(uri)) {
             diagnosticsMap.set(uri, []);
         }
-        diagnosticsMap.get(uri)!.push(diagnostic);
+        const diagnostics = diagnosticsMap.get(uri);
+        if (diagnostics) {
+            diagnostics.push(diagnostic);
+        }
     }
     
     return diagnosticsMap;
