@@ -2,7 +2,7 @@
   "name": "detekt-vscode-extension",
   "displayName": "Detekt",
   "description": "Run detekt analysis on Kotlin files and display results in Problems panel",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -16,7 +16,7 @@
     "linter",
     "code analysis"
   ],
-  "publisher": "your-publisher-name",
+  "publisher": "Sid Ferreira",
   "repository": {
     "type": "git",
     "url": "https://github.com/sidferreira/detekt-vscode-extension"
@@ -71,7 +71,9 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/run-test.js",
+    "test:unit": "npm run compile && npm run test",
+    "test:integration": "npm run compile && npm run test"
   },
   "devDependencies": {
     "@types/vscode": "^1.75.0",
