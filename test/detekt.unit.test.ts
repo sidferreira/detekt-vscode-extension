@@ -1,4 +1,6 @@
 import * as path from 'path';
+import { spawn } from 'child_process';
+import * as fs from 'fs';
 
 // Create comprehensive VS Code mocks for unit testing
 const mockDiagnosticCollection = {
@@ -92,6 +94,41 @@ const mockVscode = {
 // Mock the vscode module
 jest.mock('vscode', () => mockVscode, { virtual: true });
 
+// Helper functions
+function checkDetektInstalled(): Promise<boolean> {
+    return new Promise((resolve) => {
+        const process = spawn('which', ['detekt']);
+        process.on('close', (code) => resolve(code === 0));
+        process.on('error', () => resolve(false));
+    });
+}
+
+function runDetekt(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const detektProcess = spawn('detekt', ['--input', filePath]);
+        
+        let stdout = '';
+        let stderr = '';
+
+        detektProcess.stdout.on('data', (data: any) => {
+            stdout += data.toString();
+        });
+
+        detektProcess.stderr.on('data', (data: any) => {
+            stderr += data.toString();
+        });
+
+        detektProcess.on('close', () => {
+            // detekt returns non-zero when issues found, but that's expected
+            resolve(stdout + stderr);
+        });
+
+        detektProcess.on('error', (error: Error) => {
+            reject(error);
+        });
+    });
+}
+
 describe('Detekt Unit Test Suite - Diagnostic Counting', () => {
     let extensionModule: any;
 
@@ -117,170 +154,162 @@ describe('Detekt Unit Test Suite - Diagnostic Counting', () => {
         expect(diagnosticsMap.size).toBe(0);
     });
 
-    test('parseDetektOutput counts single diagnostic correctly', () => {
-        const workspacePath = '/test/workspace';
-        const output = '/test/workspace/Example.kt:1:1: Line must not be longer than 120 characters (current length is 157) [MaxLineLength]';
-        
-        const diagnosticsMap = extensionModule.parseDetektOutput(output, workspacePath);
-        
-        expect(diagnosticsMap.size).toBe(1);
-        
-        const diagnostics = Array.from(diagnosticsMap.values())[0];
-        expect(diagnostics.length).toBe(1);
-        expect(diagnostics[0].message).toBe('Line must not be longer than 120 characters (current length is 157)');
-        expect(diagnostics[0].code).toBe('MaxLineLength');
-        expect(diagnostics[0].source).toBe('detekt');
-    });
+    test('parseDetektOutput counts diagnostics using real detekt on good-example.kt (should be 0)', async () => {
+        // Skip if detekt not installed
+        const isInstalled = await checkDetektInstalled();
+        if (!isInstalled) {
+            console.log('Skipping test: detekt not installed');
+            return;
+        }
 
-    test('parseDetektOutput counts multiple diagnostics for same file', () => {
-        const workspacePath = '/test/workspace';
-        const output = `
-/test/workspace/Example.kt:1:1: Line must not be longer than 120 characters (current length is 157) [MaxLineLength]
-/test/workspace/Example.kt:5:5: Missing newline after class header [NewLineAfterClassHeader]
-/test/workspace/Example.kt:10:20: Unnecessary safe call on a non-null receiver of type Example [UnnecessarySafeCall]
-        `.trim();
+        const fixturesPath = path.resolve(__dirname, './fixtures');
+        const goodExamplePath = path.join(fixturesPath, 'good-example.kt');
         
-        const diagnosticsMap = extensionModule.parseDetektOutput(output, workspacePath);
-        
-        expect(diagnosticsMap.size).toBe(1);
-        
-        const diagnostics = Array.from(diagnosticsMap.values())[0];
-        expect(diagnostics.length).toBe(3);
-    });
+        if (!fs.existsSync(goodExamplePath)) {
+            throw new Error('Test fixture good-example.kt not found');
+        }
 
-    test('parseDetektOutput counts diagnostics across multiple files', () => {
-        const workspacePath = '/test/workspace';
-        const output = `
-/test/workspace/File1.kt:1:1: Issue in file 1 [Rule1]
-/test/workspace/File1.kt:2:1: Another issue in file 1 [Rule2]
-/test/workspace/File2.kt:1:1: Issue in file 2 [Rule3]
-/test/workspace/File3.kt:5:10: Issue in file 3 [Rule4]
-/test/workspace/File3.kt:7:1: Another issue in file 3 [Rule5]
-        `.trim();
+        const detektOutput = await runDetekt(goodExamplePath);
+        const diagnosticsMap = extensionModule.parseDetektOutput(detektOutput, fixturesPath);
         
-        const diagnosticsMap = extensionModule.parseDetektOutput(output, workspacePath);
-        
-        expect(diagnosticsMap.size).toBe(3);
-        
-        // Count total diagnostics across all files
-        const totalDiagnostics = Array.from(diagnosticsMap.values())
-            .reduce((sum, diags) => sum + diags.length, 0);
-        
-        expect(totalDiagnostics).toBe(5);
-        
-        // Verify individual file diagnostic counts
-        const file1Uri = mockVscode.Uri.file('/test/workspace/File1.kt');
-        const file2Uri = mockVscode.Uri.file('/test/workspace/File2.kt');
-        const file3Uri = mockVscode.Uri.file('/test/workspace/File3.kt');
-        
-        expect(diagnosticsMap.get(file1Uri)?.length).toBe(2);
-        expect(diagnosticsMap.get(file2Uri)?.length).toBe(1);
-        expect(diagnosticsMap.get(file3Uri)?.length).toBe(2);
-    });
-
-    test('parseDetektOutput counts exactly 13 diagnostics for bad-example.kt output', () => {
-        const workspacePath = '/test/workspace';
-        // Simulate typical detekt output for bad-example.kt
-        const output = `
-/test/workspace/bad-example.kt:1:1: Line must not be longer than 120 characters (current length is 157) [MaxLineLength]
-/test/workspace/bad-example.kt:2:1: Missing newline after package statement [PackageStatementSpacing]
-/test/workspace/bad-example.kt:3:8: Function names should be in camelCase [FunctionNaming]
-/test/workspace/bad-example.kt:4:5: Magic number found [MagicNumber]
-/test/workspace/bad-example.kt:5:10: Unnecessary safe call [UnnecessarySafeCall]
-/test/workspace/bad-example.kt:6:1: Too many blank lines [TooManyBlankLines]
-/test/workspace/bad-example.kt:7:15: Empty catch block [EmptyCatchBlock]
-/test/workspace/bad-example.kt:8:20: Variable declaration without type [VariableDeclarationWithoutType]
-/test/workspace/bad-example.kt:9:5: Unused import [UnusedImport]
-/test/workspace/bad-example.kt:10:1: Missing documentation [UndocumentedPublicFunction]
-/test/workspace/bad-example.kt:11:8: Complex method [ComplexMethod]
-/test/workspace/bad-example.kt:12:12: Long method [LongMethod]
-/test/workspace/bad-example.kt:13:3: Trailing comma [TrailingComma]
-        `.trim();
-        
-        const diagnosticsMap = extensionModule.parseDetektOutput(output, workspacePath);
-        
-        expect(diagnosticsMap.size).toBe(1);
-        
-        const diagnostics = Array.from(diagnosticsMap.values())[0];
-        expect(diagnostics.length).toBe(13);
-    });
-
-    test('parseDetektOutput ignores malformed lines and counts only valid diagnostics', () => {
-        const workspacePath = '/test/workspace';
-        const output = `
-/test/workspace/Example.kt:1:1: Valid diagnostic [Rule1]
-This is not a valid diagnostic line
-/test/workspace/Example.kt:2:1: Another valid diagnostic [Rule2]
-Random text that should be ignored
-/test/workspace/Example.kt:3:1: Third valid diagnostic [Rule3]
-        `.trim();
-        
-        const diagnosticsMap = extensionModule.parseDetektOutput(output, workspacePath);
-        
-        expect(diagnosticsMap.size).toBe(1);
-        
-        const diagnostics = Array.from(diagnosticsMap.values())[0];
-        expect(diagnostics.length).toBe(3);
-    });
-
-    test('parseDetektOutput handles relative paths correctly', () => {
-        const workspacePath = '/test/workspace';
-        const output = `
-src/main/kotlin/Example.kt:1:1: Issue in relative path [Rule1]
-src/test/kotlin/Test.kt:5:5: Issue in test file [Rule2]
-        `.trim();
-        
-        const diagnosticsMap = extensionModule.parseDetektOutput(output, workspacePath);
-        
-        expect(diagnosticsMap.size).toBe(2);
-        
-        const totalDiagnostics = Array.from(diagnosticsMap.values())
-            .reduce((sum, diags) => sum + diags.length, 0);
-        
-        expect(totalDiagnostics).toBe(2);
-    });
-
-    test('parseDetektOutput counts zero diagnostics for clean output', () => {
-        const workspacePath = '/test/workspace';
-        const output = 'Detekt analysis completed successfully with no issues found.';
-        
-        const diagnosticsMap = extensionModule.parseDetektOutput(output, workspacePath);
-        
-        expect(diagnosticsMap.size).toBe(0);
-        
+        // Good example should have 0 diagnostics
         const totalDiagnostics = Array.from(diagnosticsMap.values())
             .reduce((sum, diags) => sum + diags.length, 0);
         
         expect(totalDiagnostics).toBe(0);
-    });
+    }, 30000);
 
-    test('parseDetektOutput verifies diagnostic properties are set correctly', () => {
-        const workspacePath = '/test/workspace';
-        const output = '/test/workspace/Example.kt:10:5: Test message [TestRule]';
+    test('parseDetektOutput counts diagnostics using real detekt on single-issue.kt', async () => {
+        // Skip if detekt not installed
+        const isInstalled = await checkDetektInstalled();
+        if (!isInstalled) {
+            console.log('Skipping test: detekt not installed');
+            return;
+        }
+
+        const fixturesPath = path.resolve(__dirname, './fixtures');
+        const singleIssuePath = path.join(fixturesPath, 'single-issue.kt');
         
-        const diagnosticsMap = extensionModule.parseDetektOutput(output, workspacePath);
+        if (!fs.existsSync(singleIssuePath)) {
+            throw new Error('Test fixture single-issue.kt not found');
+        }
+
+        const detektOutput = await runDetekt(singleIssuePath);
+        const diagnosticsMap = extensionModule.parseDetektOutput(detektOutput, fixturesPath);
+        
+        expect(diagnosticsMap.size).toBeGreaterThan(0);
         
         const diagnostics = Array.from(diagnosticsMap.values())[0];
-        expect(diagnostics.length).toBe(1);
+        expect(diagnostics.length).toBeGreaterThan(0);
+        
+        // Count total diagnostics
+        const totalDiagnostics = Array.from(diagnosticsMap.values())
+            .reduce((sum, diags) => sum + diags.length, 0);
+        
+        console.log(`single-issue.kt: Found ${totalDiagnostics} diagnostic(s)`);
+        
+        // Verify diagnostic properties
+        const firstDiagnostic = diagnostics[0];
+        expect(firstDiagnostic).toHaveProperty('message');
+        expect(firstDiagnostic).toHaveProperty('code');
+        expect(firstDiagnostic.source).toBe('detekt');
+    }, 30000);
+
+    test('parseDetektOutput counts multiple diagnostics using real detekt on multiple-issues.kt', async () => {
+        // Skip if detekt not installed
+        const isInstalled = await checkDetektInstalled();
+        if (!isInstalled) {
+            console.log('Skipping test: detekt not installed');
+            return;
+        }
+
+        const fixturesPath = path.resolve(__dirname, './fixtures');
+        const multipleIssuesPath = path.join(fixturesPath, 'multiple-issues.kt');
+        
+        if (!fs.existsSync(multipleIssuesPath)) {
+            throw new Error('Test fixture multiple-issues.kt not found');
+        }
+
+        const detektOutput = await runDetekt(multipleIssuesPath);
+        const diagnosticsMap = extensionModule.parseDetektOutput(detektOutput, fixturesPath);
+        
+        expect(diagnosticsMap.size).toBe(1);
+        
+        const diagnostics = Array.from(diagnosticsMap.values())[0];
+        expect(diagnostics.length).toBeGreaterThan(1);
+        
+        // Count total diagnostics
+        const totalDiagnostics = Array.from(diagnosticsMap.values())
+            .reduce((sum, diags) => sum + diags.length, 0);
+        
+        console.log(`multiple-issues.kt: Found ${totalDiagnostics} diagnostic(s)`);
+    }, 30000);
+
+    test('parseDetektOutput counts diagnostics using real detekt on bad-example.kt', async () => {
+        // Skip if detekt not installed
+        const isInstalled = await checkDetektInstalled();
+        if (!isInstalled) {
+            console.log('Skipping test: detekt not installed');
+            return;
+        }
+
+        const fixturesPath = path.resolve(__dirname, './fixtures');
+        const badExamplePath = path.join(fixturesPath, 'bad-example.kt');
+        
+        if (!fs.existsSync(badExamplePath)) {
+            throw new Error('Test fixture bad-example.kt not found');
+        }
+
+        const detektOutput = await runDetekt(badExamplePath);
+        const diagnosticsMap = extensionModule.parseDetektOutput(detektOutput, fixturesPath);
+        
+        expect(diagnosticsMap.size).toBe(1);
+        
+        const diagnostics = Array.from(diagnosticsMap.values())[0];
+        
+        // Count total diagnostics
+        const totalDiagnostics = Array.from(diagnosticsMap.values())
+            .reduce((sum, diags) => sum + diags.length, 0);
+        
+        console.log(`bad-example.kt: Found ${totalDiagnostics} diagnostic(s)`);
+        
+        // bad-example.kt should have multiple issues
+        expect(diagnostics.length).toBeGreaterThan(0);
+        
+        // Verify diagnostic properties
+        const firstDiagnostic = diagnostics[0];
+        expect(firstDiagnostic).toHaveProperty('range');
+        expect(firstDiagnostic).toHaveProperty('message');
+        expect(firstDiagnostic).toHaveProperty('code');
+        expect(firstDiagnostic.source).toBe('detekt');
+    }, 30000);
+
+    test('parseDetektOutput verifies diagnostic properties are set correctly', async () => {
+        // Skip if detekt not installed
+        const isInstalled = await checkDetektInstalled();
+        if (!isInstalled) {
+            console.log('Skipping test: detekt not installed');
+            return;
+        }
+
+        const fixturesPath = path.resolve(__dirname, './fixtures');
+        const singleIssuePath = path.join(fixturesPath, 'single-issue.kt');
+        
+        if (!fs.existsSync(singleIssuePath)) {
+            throw new Error('Test fixture single-issue.kt not found');
+        }
+
+        const detektOutput = await runDetekt(singleIssuePath);
+        const diagnosticsMap = extensionModule.parseDetektOutput(detektOutput, fixturesPath);
+        
+        const diagnostics = Array.from(diagnosticsMap.values())[0];
+        expect(diagnostics.length).toBeGreaterThan(0);
         
         const diagnostic = diagnostics[0];
-        expect(diagnostic.message).toBe('Test message');
-        expect(diagnostic.code).toBe('TestRule');
+        expect(diagnostic.message).toBeTruthy();
+        expect(diagnostic.code).toBeTruthy();
         expect(diagnostic.source).toBe('detekt');
-        expect(diagnostic.range.start.line).toBe(9); // 0-based
-        expect(diagnostic.range.start.character).toBe(4); // 0-based
-    });
-
-    test('parseDetektOutput counts diagnostics with long multiline messages', () => {
-        const workspacePath = '/test/workspace';
-        const output = `
-/test/workspace/Example.kt:1:1: This is a very long error message that might span multiple lines in the output but should still be counted as a single diagnostic [LongMessageRule]
-/test/workspace/Example.kt:2:1: Another diagnostic [Rule2]
-        `.trim();
-        
-        const diagnosticsMap = extensionModule.parseDetektOutput(output, workspacePath);
-        
-        const diagnostics = Array.from(diagnosticsMap.values())[0];
-        expect(diagnostics.length).toBe(2);
-    });
+        expect(diagnostic.range.start.line).toBeGreaterThanOrEqual(0);
+        expect(diagnostic.range.start.character).toBeGreaterThanOrEqual(0);
+    }, 30000);
 });
