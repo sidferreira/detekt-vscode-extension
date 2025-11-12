@@ -228,7 +228,7 @@ export function parseKtlintOutput(output: string, workspacePath: string): Map<vs
     const diagnosticsMap = new Map<vscode.Uri, vscode.Diagnostic[]>();
     
     // Pattern: file.kt:line:col: message (rule-id)
-    const linePattern = /^(.+\.kt):(\d+):(\d+):\s+(.+?)\s+\((.+?)\)(?:\s+|$)/gm;
+    const linePattern = /^(.+\.kt):(\d+):(\d+): ([^\(]+) \(([^\)]+)\)/gm;
     
     let match;
     while ((match = linePattern.exec(output)) !== null) {

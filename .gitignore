@@ -24,6 +24,7 @@ yarn-error.log*
 
 # VSIX packages
 *.vsix
+packages/*/*.vsix
 
 # Coverage
 coverage/

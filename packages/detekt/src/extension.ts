@@ -145,7 +145,7 @@ export function parseDetektOutput(output: string, workspacePath: string): Map<vs
     
     // Pattern: file.kt:line:column: message [RuleId]
     // Split by lines that start with file path to handle wrapped messages
-    const linePattern = /^(.+\.kt):(\d+):(\d+):\s+(.+?)\s+\[(.+?)\](?:\s+|$)/gm;
+    const linePattern = /^(.+\.kt):(\d+):(\d+): ([^\[]+) \[([^\]]+)\]/gm;
     
     let match;
     while ((match = linePattern.exec(output)) !== null) {
