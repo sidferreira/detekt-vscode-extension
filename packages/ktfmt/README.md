@@ -6,7 +6,7 @@ Format Kotlin code using ktfmt (Kotlin formatter by Google).
 
 - **Format Current File**: Format the currently open Kotlin file
 - **Format Workspace**: Format all Kotlin files in the workspace
-- **Format on Save**: Optionally format files automatically when saving (disabled by default)
+- **Format on Save**: Format files automatically when saving (enabled by default)
 - **Configurable**: Customize ktfmt executable path and arguments
 
 ## Requirements
@@ -35,7 +35,7 @@ https://github.com/facebook/ktfmt/releases
 This extension contributes the following settings:
 
 * `ktfmt.enable`: Enable/disable the ktfmt extension (default: `true`)
-* `ktfmt.formatOnSave`: Format Kotlin files automatically when saving (default: `false`)
+* `ktfmt.formatOnSave`: Format Kotlin files automatically when saving (default: `true`)
 * `ktfmt.executablePath`: Path to the ktfmt executable (default: `"ktfmt"`)
 * `ktfmt.args`: Additional arguments to pass to ktfmt (default: `[]`)
 
@@ -49,13 +49,14 @@ This extension contributes the following commands:
 ## Usage
 
 1. Open a Kotlin file (`.kt`)
-2. Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and search for "ktfmt"
-3. Select the desired command
+2. The file will be automatically formatted on save (default behavior)
+3. Or use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and search for "ktfmt"
+4. Select the desired command
 
-Or enable format on save in settings:
+To disable format on save:
 ```json
 {
-  "ktfmt.formatOnSave": true
+  "ktfmt.formatOnSave": false
 }
 ```
 

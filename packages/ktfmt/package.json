@@ -46,7 +46,7 @@
         },
         "ktfmt.formatOnSave": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Format Kotlin files automatically when saving"
         },
         "ktfmt.executablePath": {
