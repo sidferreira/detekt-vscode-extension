@@ -30,6 +30,7 @@ coverage/
 
 # Test results
 test-results/
+packages/*/test-results/
 
 # TypeScript
 *.tsbuildinfo
