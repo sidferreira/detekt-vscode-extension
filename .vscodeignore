@@ -1,0 +1,15 @@
+.vscode-test/
+.vscode/
+coverage/
+test/
+src/
+.git/
+.gitignore
+.eslintrc.json
+jest.config.js
+jest-setup.ts
+tsconfig.json
+package-lock.json
+test-results/
+out/
+dist/*.map
