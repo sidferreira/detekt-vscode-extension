@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [detekt, ktfmt, ktlint]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Compile ${{ matrix.package }}
+        run: |
+          cd packages/${{ matrix.package }}
+          npm run compile
+      
+      - name: Lint ${{ matrix.package }}
+        run: |
+          cd packages/${{ matrix.package }}
+          npm run lint
+      
+      - name: Test ${{ matrix.package }}
+        run: |
+          cd packages/${{ matrix.package }}
+          npm test

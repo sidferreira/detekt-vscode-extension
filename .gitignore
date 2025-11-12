@@ -1,10 +1,14 @@
 # Node
 node_modules/
+packages/*/node_modules/
 
 # Build output
 dist/
 out/
 build/
+packages/*/dist/
+packages/*/out/
+packages/*/build/
 
 # VS Code
 .vscode/
