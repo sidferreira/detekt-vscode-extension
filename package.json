@@ -2,7 +2,7 @@
   "name": "detekt-vscode-extension",
   "displayName": "Detekt",
   "description": "Run detekt analysis on Kotlin files and display results in Problems panel",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "engines": {
     "vscode": "^1.75.0"
   },

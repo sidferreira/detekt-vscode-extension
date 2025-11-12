@@ -35,8 +35,7 @@ jobs:
         run: npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
       
       - name: Create GitHub Release with VSIX
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/detekt-vscode-extension-*.vsix
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} dist/detekt-vscode-extension-*.vsix --title "Release ${{ github.ref_name }}" --generate-release-notes || true
