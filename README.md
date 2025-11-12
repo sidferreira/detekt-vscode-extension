@@ -62,7 +62,8 @@ This extension contributes the following settings:
 ## Documentation
 
 - [CHANGELOG.md](CHANGELOG.md) - Version history and release notes
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Development setup and contribution guidelines
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines and setup
+- [Development Guide](docs/DEVELOPMENT.md) - Architecture, debugging, and development workflow
 - [CI/CD Setup](docs/CI_CD_SETUP.md) - Continuous integration and deployment guide
 - [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
 

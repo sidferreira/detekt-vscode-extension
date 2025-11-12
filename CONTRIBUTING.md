@@ -5,12 +5,11 @@ Thank you for your interest in contributing to the Detekt VSCode Extension! This
 ## Table of Contents
 
 - [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Project Structure](#project-structure)
 - [Development Workflow](#development-workflow)
 - [Testing](#testing)
 - [Submitting Changes](#submitting-changes)
 - [Code Style](#code-style)
+- [Additional Resources](#additional-resources)
 
 ## Getting Started
 
@@ -34,73 +33,48 @@ Thank you for your interest in contributing to the Detekt VSCode Extension! This
    npm install
    ```
 
-3. **Compile the extension**
+3. **Compile and test**
    ```bash
    npm run compile
-   ```
-
-4. **Run tests**
-   ```bash
    npm test
    ```
 
-## Project Structure
-
-```
-detekt-vscode-extension/
-├── .github/              # GitHub configuration and workflows
-│   └── workflows/        # CI/CD workflows
-├── .vscode/              # VSCode settings and launch configurations
-├── docs/                 # Documentation files
-│   ├── CI_CD_SETUP.md   # CI/CD setup guide
-│   └── TROUBLESHOOTING.md # Troubleshooting guide
-├── src/                  # Source code
-│   └── extension.ts      # Main extension code
-├── test/                 # Test files
-│   ├── fixtures/         # Test fixtures (Kotlin files)
-│   └── *.test.ts        # Test files
-├── dist/                 # Compiled output (generated)
-├── CHANGELOG.md          # Version history
-├── CONTRIBUTING.md       # This file
-├── README.md             # User-facing documentation
-└── package.json          # Extension manifest
-```
+For detailed development information, architecture, and debugging tips, see the [Development Guide](docs/DEVELOPMENT.md).
 
 ## Development Workflow
 
-### Building
+### Quick Start
 
 ```bash
 # Compile TypeScript
 npm run compile
 
-# Watch mode for development
+# Watch mode for development  
 npm run watch
+
+# Run the extension
+# Press F5 in VSCode to launch Extension Development Host
 ```
-
-### Running the Extension
-
-1. Open the project in VSCode
-2. Press `F5` to launch the Extension Development Host
-3. This opens a new VSCode window with the extension loaded
-4. Open a Kotlin project to test the extension
 
 ### Making Changes
 
-1. Create a new branch for your feature/fix
+1. **Create a branch**
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
-2. Make your changes in the `src/` directory
+2. **Make your changes** in the `src/` directory
 
-3. Compile and test your changes
+3. **Test your changes**
    ```bash
    npm run compile
    npm test
+   npm run lint
    ```
 
-4. Test the extension manually in the Extension Development Host
+4. **Test manually** - Press `F5` to launch Extension Development Host
+
+For detailed architecture and debugging information, see [Development Guide](docs/DEVELOPMENT.md).
 
 ## Testing
 
@@ -204,6 +178,13 @@ npm run lint
 
 ## Additional Resources
 
+### Documentation
+- [Development Guide](docs/DEVELOPMENT.md) - Architecture, debugging, and internals
+- [CI/CD Setup](docs/CI_CD_SETUP.md) - Continuous integration and deployment
+- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
+- [Changelog](CHANGELOG.md) - Version history
+
+### External Resources
 - [VSCode Extension API](https://code.visualstudio.com/api)
 - [Detekt Documentation](https://detekt.dev/)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
@@ -211,7 +192,8 @@ npm run lint
 ## Getting Help
 
 - Open an issue for bug reports or feature requests
-- Check existing issues before creating new ones
+- Check [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for common problems
+- Review existing issues before creating new ones
 - Join discussions in existing issues or PRs
 
 ## License
