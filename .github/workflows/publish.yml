@@ -27,15 +27,15 @@ jobs:
       - name: Package extension
         run: npm run package:out
       
+      - name: Create GitHub Release with VSIX
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} dist/detekt-vscode-extension-*.vsix --title "Release ${{ github.ref_name }}" --generate-notes || true
+      
       - name: Publish to VS Code Marketplace
         run: npm run publish -- --pat ${{ secrets.VSCE_PAT }}
       
       - name: Publish to Open VSX
         continue-on-error: true
         run: npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
-      
-      - name: Create GitHub Release with VSIX
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create ${{ github.ref_name }} dist/detekt-vscode-extension-*.vsix --title "Release ${{ github.ref_name }}" --generate-release-notes || true
