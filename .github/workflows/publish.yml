@@ -28,4 +28,5 @@ jobs:
         run: npm run publish -- --pat ${{ secrets.VSCE_PAT }}
       
       - name: Publish to Open VSX
+        continue-on-error: true
         run: npx ovsx publish --pat ${{ secrets.OVSX_PAT }}

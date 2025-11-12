@@ -117,8 +117,8 @@ describe('Detekt Integration Test Suite', () => {
         };
 
         // Import the compiled extension
-        delete require.cache[require.resolve('../dist/extensions.js')];
-        extensionModule = require('../dist/extensions.js');
+        delete require.cache[require.resolve('../dist/extension.js')];
+        extensionModule = require('../dist/extension.js');
     });
 
     beforeEach(() => {
@@ -129,8 +129,8 @@ describe('Detekt Integration Test Suite', () => {
         (global as any).mockCommands = {};
         
         // Reload the extension module for clean state
-        delete require.cache[require.resolve('../dist/extensions.js')];
-        extensionModule = require('../dist/extensions.js');
+        delete require.cache[require.resolve('../dist/extension.js')];
+        extensionModule = require('../dist/extension.js');
     });
 
     test('Extension activates without errors', () => {
@@ -175,6 +175,9 @@ describe('Detekt Integration Test Suite', () => {
         const diagnostics = Array.from(diagnosticsMap.values())[0] as any[];
         expect(Array.isArray(diagnostics)).toBe(true);
         expect(diagnostics.length).toBeGreaterThan(0);
+        
+        // Verify we found exactly 13 issues in bad-example.kt
+        expect(diagnostics.length).toBe(13);
         
         // Verify diagnostic structure
         const firstDiagnostic = diagnostics[0];

@@ -144,10 +144,11 @@ export function parseDetektOutput(output: string, workspacePath: string): Map<vs
     const diagnosticsMap = new Map<vscode.Uri, vscode.Diagnostic[]>();
     
     // Pattern: file.kt:line:column: message [RuleId]
-    const pattern = /^(.+\.kt):(\d+):(\d+):\s+(.+?)\s+\[(.+?)\]$/gm;
+    // Split by lines that start with file path to handle wrapped messages
+    const linePattern = /^(.+\.kt):(\d+):(\d+):\s+(.+?)\s+\[(.+?)\](?:\s+|$)/gm;
     
     let match;
-    while ((match = pattern.exec(output)) !== null) {
+    while ((match = linePattern.exec(output)) !== null) {
         const [, filePath, lineStr, columnStr, message, code] = match;
         
         // Remove project root from path to make it relative
