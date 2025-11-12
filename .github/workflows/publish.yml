@@ -25,7 +25,7 @@ jobs:
         run: npm test
       
       - name: Package extension
-        run: npm run package
+        run: npm run package:out
       
       - name: Publish to VS Code Marketplace
         run: npm run publish -- --pat ${{ secrets.VSCE_PAT }}
@@ -37,6 +37,6 @@ jobs:
       - name: Create GitHub Release with VSIX
         uses: softprops/action-gh-release@v1
         with:
-          files: detekt-vscode-extension-*.vsix
+          files: dist/detekt-vscode-extension-*.vsix
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
