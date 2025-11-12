@@ -43,10 +43,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm run test -- --coverage --testResultsProcessor=jest-junit
-        env:
-          JUNIT_SUITE_NAME: Jest Tests
-          JUNIT_OUTPUT_DIR: ./test-results
+        run: npm run test -- --coverage
 
       - name: Upload test results
         uses: dorny/test-reporter@v1
