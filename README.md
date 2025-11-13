@@ -19,7 +19,7 @@ Format Kotlin code using ktfmt (Kotlin formatter by Google).
 **Features:**
 - Format current file
 - Format entire workspace
-- Format on save (optional)
+- Format on save (enabled by default)
 - Configurable ktfmt executable path
 - Custom arguments support
 
@@ -27,12 +27,33 @@ Format Kotlin code using ktfmt (Kotlin formatter by Google).
 Run ktlint analysis on Kotlin files with built-in formatting capabilities.
 
 **Features:**
-- Automatic analysis on file save
+- Automatic analysis on file save (enabled by default)
 - Manual analysis command
 - Format current file with ktlint
 - Format on save (optional)
 - Configurable ktlint executable path
 - Custom arguments support
+
+## Installation
+
+Install from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/) or search for the extension name (Detekt, ktfmt, or ktlint) in the Extensions view (`Ctrl+Shift+X`).
+
+## Requirements
+
+Each extension requires its respective tool to be installed:
+- **detekt**: https://detekt.dev/docs/intro
+- **ktfmt**: https://github.com/facebook/ktfmt
+- **ktlint**: https://github.com/pinterest/ktlint
+
+The extensions assume the tools are available in your PATH, or you can configure custom paths in settings.
+
+## Documentation
+
+- [CHANGELOG.md](CHANGELOG.md) - Version history and release notes
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines and setup
+- [Development Guide](docs/DEVELOPMENT.md) - Architecture, debugging, and development workflow
+- [CI/CD Setup](docs/CI_CD_SETUP.md) - Continuous integration and deployment guide
+- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
 
 ## Development
 
@@ -94,6 +115,10 @@ npm run package
 Each extension can be published independently. See the individual package READMEs for specific publishing instructions.
 
 The GitHub Actions workflow automatically publishes extensions when their versions are updated in their respective `package.json` files.
+
+## Troubleshooting
+
+Having issues? Check out our [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for common problems and solutions.
 
 ## License
 
