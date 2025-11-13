@@ -1,0 +1,96 @@
+{
+  "name": "ktfmt-vscode-extension",
+  "displayName": "ktfmt",
+  "description": "Run ktfmt formatter on Kotlin files",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Formatters",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "kotlin",
+    "ktfmt",
+    "formatter",
+    "code formatting"
+  ],
+  "publisher": "SidFerreira",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sidferreira/detekt-vscode-extension",
+    "directory": "packages/ktfmt"
+  },
+  "license": "MIT",
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ktfmt.formatDocument",
+        "title": "ktfmt: Format Current File"
+      },
+      {
+        "command": "ktfmt.formatWorkspace",
+        "title": "ktfmt: Format All Kotlin Files in Workspace"
+      }
+    ],
+    "configuration": {
+      "title": "ktfmt",
+      "properties": {
+        "ktfmt.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable the ktfmt extension"
+        },
+        "ktfmt.formatOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Format Kotlin files automatically when saving"
+        },
+        "ktfmt.executablePath": {
+          "type": "string",
+          "default": "ktfmt",
+          "description": "Path to the ktfmt executable"
+        },
+        "ktfmt.args": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional arguments to pass to ktfmt"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "yarn compile && jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "package": "npx @vscode/vsce package",
+    "package:out": "npx @vscode/vsce package --out ./dist/${npm_package_name}-${npm_package_version}.vsix",
+    "publish": "npx @vscode/vsce publish"
+  },
+  "devDependencies": {
+    "@swc-node/jest": "^1.9.1",
+    "@swc/core": "^1.15.1",
+    "@swc/helpers": "^0.5.17",
+    "@types/jest": "^29.5.14",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.75.0",
+    "@typescript-eslint/eslint-plugin": "^5.53.0",
+    "@typescript-eslint/parser": "^5.53.0",
+    "@vscode/test-electron": "^2.2.3",
+    "eslint": "^8.34.0",
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "typescript": "^5.9.3",
+    "@vscode/vsce": "^2.13.0"
+  }
+}

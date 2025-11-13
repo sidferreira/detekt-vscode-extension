@@ -1,0 +1,80 @@
+name: Publish ktlint Extension
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/ktlint/**'
+      - '.github/workflows/publish-ktlint.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.version_check.outputs.should_publish }}
+      version: ${{ steps.version_check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Check if version changed
+        id: version_check
+        run: |
+          cd packages/ktlint
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          
+          # Check if version was changed in this commit
+          git diff HEAD^ HEAD -- package.json | grep -q '"version"' && echo "should_publish=true" >> $GITHUB_OUTPUT || echo "should_publish=false" >> $GITHUB_OUTPUT
+
+  publish:
+    needs: check-version
+    if: needs.check-version.outputs.should_publish == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Compile
+        run: npm run compile
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Package extension
+        run: |
+          cd packages/ktlint
+          npm run package:out
+      
+      - name: Create GitHub Release with VSIX
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ needs.check-version.outputs.version }}
+          cd packages/ktlint
+          gh release create ktlint-v${VERSION} dist/ktlint-vscode-extension-*.vsix --title "ktlint Extension v${VERSION}" --generate-notes || true
+      
+      - name: Publish to VS Code Marketplace
+        if: secrets.VSCE_PAT != ''
+        run: |
+          cd packages/ktlint
+          npm run publish -- --pat ${{ secrets.VSCE_PAT }}
+      
+      - name: Publish to Open VSX
+        if: secrets.OVSX_PAT != ''
+        continue-on-error: true
+        run: |
+          cd packages/ktlint
+          npx ovsx publish --pat ${{ secrets.OVSX_PAT }}

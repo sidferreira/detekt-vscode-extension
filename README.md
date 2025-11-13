@@ -1,63 +1,51 @@
-# Detekt VSCode Extension
+# Kotlin Tooling Extensions Monorepo
 
-A VSCode extension that automatically runs detekt on Kotlin files and displays problems in the Problems panel.
+This monorepo contains VS Code extensions for Kotlin development tooling:
 
-## Features
+## Extensions
 
-- 🔄 **Auto-run on save**: Automatically runs detekt when you save a Kotlin file
-- 🎯 **Manual analysis**: Run detekt on the entire project with a command
-- 📋 **Problems panel integration**: See all detekt findings in VSCode's Problems panel
-- ⚡ **Real-time feedback**: Get instant feedback on code quality issues
+### 1. [Detekt](./packages/detekt) - Kotlin Static Analysis
+Run detekt analysis on Kotlin files and display results in the Problems panel.
+
+**Features:**
+- Automatic analysis on file save
+- Manual analysis command
+- Configurable detekt executable path
+- Custom arguments support
+
+### 2. [ktfmt](./packages/ktfmt) - Kotlin Code Formatter
+Format Kotlin code using ktfmt (Kotlin formatter by Google).
+
+**Features:**
+- Format current file
+- Format entire workspace
+- Format on save (enabled by default)
+- Configurable ktfmt executable path
+- Custom arguments support
+
+### 3. [ktlint](./packages/ktlint) - Kotlin Linter
+Run ktlint analysis on Kotlin files with built-in formatting capabilities.
+
+**Features:**
+- Automatic analysis on file save (enabled by default)
+- Manual analysis command
+- Format current file with ktlint
+- Format on save (optional)
+- Configurable ktlint executable path
+- Custom arguments support
 
 ## Installation
 
-Install from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/) or search for "Detekt" in the Extensions view (`Ctrl+Shift+X`).
-
-## Quick Start
-
-1. Install the extension
-2. Ensure detekt is installed and available in your PATH (or configure a custom path)
-3. Open a Kotlin project
-4. Save a `.kt` file to trigger automatic analysis
-
-## Usage
-
-### Automatic Analysis
-Simply save any Kotlin file (`.kt`) and detekt will run automatically.
-
-### Manual Analysis
-- Open the Command Palette (`Cmd+Shift+P` on Mac, `Ctrl+Shift+P` on Windows/Linux)
-- Type "Detekt: Run Analysis on Project"
-- Press Enter
+Install from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/) or search for the extension name (Detekt, ktfmt, or ktlint) in the Extensions view (`Ctrl+Shift+X`).
 
 ## Requirements
 
-- **detekt must be installed** and available in your PATH
-  - Install detekt: https://detekt.dev/docs/intro
-- The extension assumes you have a working `detekt` command (or you can configure a custom path in settings)
-- Detekt CLI should output in the format: `file.kt:line:column: message [RuleId]`
+Each extension requires its respective tool to be installed:
+- **detekt**: https://detekt.dev/docs/intro
+- **ktfmt**: https://github.com/facebook/ktfmt
+- **ktlint**: https://github.com/pinterest/ktlint
 
-## Configuration
-
-The extension uses the detekt configuration from your project root (`detekt.yml` or `detekt.yaml`).
-
-### Extension Settings
-
-This extension contributes the following settings:
-
-* `detekt.enable`: Enable/disable the detekt extension (default: `true`)
-* `detekt.runOnSave`: Run detekt automatically when saving Kotlin files (default: `true`)
-* `detekt.executablePath`: Path to the detekt executable or command (default: `"detekt"`)
-* `detekt.args`: Additional arguments to pass to detekt (default: `[]`)
-
-### Example Configuration
-
-```json
-{
-  "detekt.executablePath": "/usr/local/bin/detekt",
-  "detekt.args": ["--config", "custom-detekt.yml", "--parallel"]
-}
-```
+The extensions assume the tools are available in your PATH, or you can configure custom paths in settings.
 
 ## Documentation
 
@@ -69,17 +57,64 @@ This extension contributes the following settings:
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, project structure, and contribution guidelines.
+This is a npm workspaces monorepo. To work with it:
 
-### Quick Commands
+### Install Dependencies
+```bash
+npm install
+```
+
+### Build All Packages
+```bash
+npm run compile
+```
+
+### Test All Packages
+```bash
+npm run test
+```
+
+### Watch Mode (for development)
+```bash
+npm run watch
+```
+
+### Lint All Packages
+```bash
+npm run lint
+```
+
+### Package Extensions
+```bash
+npm run package
+```
+
+## Working with Individual Packages
+
+You can also work with individual packages:
 
 ```bash
-npm install          # Install dependencies
-npm run compile      # Compile TypeScript
-npm run watch        # Watch mode for development
-npm test             # Run tests
-npm run lint         # Run ESLint
+# Navigate to a specific package
+cd packages/detekt
+
+# Install dependencies
+npm install
+
+# Build
+npm run compile
+
+# Test
+npm run test
+
+# Package
+npm run package
 ```
+
+## Publishing
+
+Each extension can be published independently. See the individual package READMEs for specific publishing instructions.
+
+The GitHub Actions workflow automatically publishes extensions when their versions are updated in their respective `package.json` files.
 
 ## Troubleshooting
 
@@ -87,16 +122,8 @@ Having issues? Check out our [Troubleshooting Guide](docs/TROUBLESHOOTING.md) fo
 
 ## License
 
-[MIT](LICENSE)
+MIT - See [LICENSE](./LICENSE) file for details.
 
-## Release Notes
+## Author
 
-See [CHANGELOG.md](CHANGELOG.md) for a detailed version history.
-
-### Latest Release (0.0.9)
-
-- Auto-run detekt on Kotlin file save
-- Manual command to run detekt on entire project
-- Problems panel integration
-- Configurable detekt executable path
-- Support for additional detekt arguments
+SidFerreira
