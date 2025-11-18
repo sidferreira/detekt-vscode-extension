@@ -1,25 +1,36 @@
 name: Release All Extensions
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/*/package.json'
+      - '.github/workflows/release-all.yml'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 0.0.10)'
-        required: true
+        description: 'Version to release (e.g., 0.0.10) - leave empty to auto-detect'
+        required: false
         type: string
 
 permissions:
   contents: write
 
 jobs:
-  check-version:
+  check-versions:
     runs-on: ubuntu-latest
     outputs:
       detekt_version: ${{ steps.get_versions.outputs.detekt_version }}
       ktlint_version: ${{ steps.get_versions.outputs.ktlint_version }}
       ktfmt_version: ${{ steps.get_versions.outputs.ktfmt_version }}
+      publish_detekt: ${{ steps.check_changes.outputs.publish_detekt }}
+      publish_ktlint: ${{ steps.check_changes.outputs.publish_ktlint }}
+      publish_ktfmt: ${{ steps.check_changes.outputs.publish_ktfmt }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       
       - name: Get current versions
         id: get_versions
@@ -28,16 +39,53 @@ jobs:
           echo "ktlint_version=$(node -p "require('./packages/ktlint/package.json').version")" >> $GITHUB_OUTPUT
           echo "ktfmt_version=$(node -p "require('./packages/ktfmt/package.json').version")" >> $GITHUB_OUTPUT
       
-      - name: Display versions
+      - name: Check what should be published
+        id: check_changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # If manual trigger with version specified, publish all
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "Manual trigger with version, publishing all"
+            echo "publish_detekt=true" >> $GITHUB_OUTPUT
+            echo "publish_ktlint=true" >> $GITHUB_OUTPUT
+            echo "publish_ktfmt=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check each package
+          for pkg in detekt ktlint ktfmt; do
+            VERSION=$(node -p "require('./packages/${pkg}/package.json').version")
+            SHOULD_PUBLISH=false
+            
+            # Check if release already exists
+            if gh release view ${pkg}-v${VERSION} &>/dev/null; then
+              echo "Release ${pkg}-v${VERSION} already exists, skipping"
+            else
+              # Check if version changed in this push or if workflow_dispatch without version
+              if [ "${{ github.event_name }}" = "workflow_dispatch" ] || \
+                 git diff HEAD^ HEAD -- packages/${pkg}/package.json | grep -q '"version"'; then
+                echo "Will publish ${pkg}-v${VERSION}"
+                SHOULD_PUBLISH=true
+              fi
+            fi
+            
+            echo "publish_${pkg}=${SHOULD_PUBLISH}" >> $GITHUB_OUTPUT
+          done
+      
+      - name: Display versions and publish plan
         run: |
           echo "Current versions:"
-          echo "  detekt: ${{ steps.get_versions.outputs.detekt_version }}"
-          echo "  ktlint: ${{ steps.get_versions.outputs.ktlint_version }}"
-          echo "  ktfmt: ${{ steps.get_versions.outputs.ktfmt_version }}"
-          echo "Target version: ${{ github.event.inputs.version }}"
+          echo "  detekt: ${{ steps.get_versions.outputs.detekt_version }} (publish: ${{ steps.check_changes.outputs.publish_detekt }})"
+          echo "  ktlint: ${{ steps.get_versions.outputs.ktlint_version }} (publish: ${{ steps.check_changes.outputs.publish_ktlint }})"
+          echo "  ktfmt: ${{ steps.get_versions.outputs.ktfmt_version }} (publish: ${{ steps.check_changes.outputs.publish_ktfmt }})"
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "Target version (manual): ${{ github.event.inputs.version }}"
+          fi
 
   publish-detekt:
-    needs: check-version
+    needs: check-versions
+    if: needs.check-versions.outputs.publish_detekt == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -64,25 +112,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=${{ github.event.inputs.version }}
+          VERSION=${{ needs.check-versions.outputs.detekt_version }}
           cd packages/detekt
           gh release create detekt-v${VERSION} dist/detekt-vscode-extension-*.vsix --title "Detekt Extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
-        if: secrets.VSCE_PAT != ''
+        if: ${{ secrets.VSCE_PAT != '' }}
         run: |
           cd packages/detekt
           npm run publish -- --pat ${{ secrets.VSCE_PAT }}
       
       - name: Publish to Open VSX
-        if: secrets.OVSX_PAT != ''
+        if: ${{ secrets.OVSX_PAT != '' }}
         continue-on-error: true
         run: |
           cd packages/detekt
           npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
 
   publish-ktlint:
-    needs: check-version
+    needs: check-versions
+    if: needs.check-versions.outputs.publish_ktlint == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,25 +158,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=${{ github.event.inputs.version }}
+          VERSION=${{ needs.check-versions.outputs.ktlint_version }}
           cd packages/ktlint
           gh release create ktlint-v${VERSION} dist/ktlint-vscode-extension-*.vsix --title "ktlint Extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
-        if: secrets.VSCE_PAT != ''
+        if: ${{ secrets.VSCE_PAT != '' }}
         run: |
           cd packages/ktlint
           npm run publish -- --pat ${{ secrets.VSCE_PAT }}
       
       - name: Publish to Open VSX
-        if: secrets.OVSX_PAT != ''
+        if: ${{ secrets.OVSX_PAT != '' }}
         continue-on-error: true
         run: |
           cd packages/ktlint
           npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
 
   publish-ktfmt:
-    needs: check-version
+    needs: check-versions
+    if: needs.check-versions.outputs.publish_ktfmt == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -154,18 +204,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=${{ github.event.inputs.version }}
+          VERSION=${{ needs.check-versions.outputs.ktfmt_version }}
           cd packages/ktfmt
           gh release create ktfmt-v${VERSION} dist/ktfmt-vscode-extension-*.vsix --title "ktfmt Extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
-        if: secrets.VSCE_PAT != ''
+        if: ${{ secrets.VSCE_PAT != '' }}
         run: |
           cd packages/ktfmt
           npm run publish -- --pat ${{ secrets.VSCE_PAT }}
       
       - name: Publish to Open VSX
-        if: secrets.OVSX_PAT != ''
+        if: ${{ secrets.OVSX_PAT != '' }}
         continue-on-error: true
         run: |
           cd packages/ktfmt
