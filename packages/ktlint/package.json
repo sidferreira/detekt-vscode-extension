@@ -1,5 +1,5 @@
 {
-  "name": "ktlint-vscode-extension",
+  "name": "very-simple-ktlint-extension",
   "displayName": "ktlint",
   "description": "Run ktlint analysis on Kotlin files and display results in Problems panel",
   "version": "0.0.10",

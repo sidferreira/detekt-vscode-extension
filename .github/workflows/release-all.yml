@@ -117,7 +117,7 @@ jobs:
         run: |
           VERSION=${{ needs.check-versions.outputs.detekt_version }}
           cd packages/detekt
-          gh release create detekt-v${VERSION} dist/detekt-vscode-extension-*.vsix --title "Detekt Extension v${VERSION}" --generate-notes || true
+          gh release create detekt-v${VERSION} dist/*.vsix --title "Detekt Extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
         if: env.VSCE_PAT != ''
@@ -166,7 +166,7 @@ jobs:
         run: |
           VERSION=${{ needs.check-versions.outputs.ktlint_version }}
           cd packages/ktlint
-          gh release create ktlint-v${VERSION} dist/ktlint-vscode-extension-*.vsix --title "ktlint Extension v${VERSION}" --generate-notes || true
+          gh release create ktlint-v${VERSION} dist/*.vsix --title "ktlint Extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
         if: env.VSCE_PAT != ''
@@ -215,7 +215,7 @@ jobs:
         run: |
           VERSION=${{ needs.check-versions.outputs.ktfmt_version }}
           cd packages/ktfmt
-          gh release create ktfmt-v${VERSION} dist/ktfmt-vscode-extension-*.vsix --title "ktfmt Extension v${VERSION}" --generate-notes || true
+          gh release create ktfmt-v${VERSION} dist/*.vsix --title "ktfmt Extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
         if: env.VSCE_PAT != ''
