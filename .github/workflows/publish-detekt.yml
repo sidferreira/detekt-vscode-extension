@@ -37,11 +37,14 @@ jobs:
             echo "Release detekt-v${CURRENT_VERSION} already exists, skipping publish"
             echo "should_publish=false" >> $GITHUB_OUTPUT
           else
+            echo "Release detekt-v${CURRENT_VERSION} does not exist"
             # Check if package.json was added or version was changed in this commit
             if git diff HEAD^ HEAD -- packages/detekt/package.json | grep -q '"version"'; then
+              echo "Version changed in this commit, will publish"
               echo "should_publish=true" >> $GITHUB_OUTPUT
             else
-              echo "should_publish=false" >> $GITHUB_OUTPUT
+              echo "Version did not change but release doesn't exist, will publish"
+              echo "should_publish=true" >> $GITHUB_OUTPUT
             fi
           fi
         env:
