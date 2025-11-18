@@ -84,13 +84,13 @@ jobs:
           gh release create ktfmt-v${VERSION} dist/ktfmt-vscode-extension-*.vsix --title "ktfmt Extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
-        if: ${{ secrets.VSCE_PAT != '' }}
+        if: secrets.VSCE_PAT != ''
         run: |
           cd packages/ktfmt
           npm run publish -- --pat ${{ secrets.VSCE_PAT }}
       
       - name: Publish to Open VSX
-        if: ${{ secrets.OVSX_PAT != '' }}
+        if: secrets.OVSX_PAT != ''
         continue-on-error: true
         run: |
           cd packages/ktfmt
