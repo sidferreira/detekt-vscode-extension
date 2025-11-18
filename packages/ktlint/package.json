@@ -2,7 +2,7 @@
   "name": "ktlint-vscode-extension",
   "displayName": "ktlint",
   "description": "Run ktlint analysis on Kotlin files and display results in Problems panel",
-  "version": "0.0.1",
+  "version": "0.0.10",
   "engines": {
     "vscode": "^1.75.0"
   },

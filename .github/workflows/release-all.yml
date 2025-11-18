@@ -1,0 +1,172 @@
+name: Release All Extensions
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.0.10)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      detekt_version: ${{ steps.get_versions.outputs.detekt_version }}
+      ktlint_version: ${{ steps.get_versions.outputs.ktlint_version }}
+      ktfmt_version: ${{ steps.get_versions.outputs.ktfmt_version }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Get current versions
+        id: get_versions
+        run: |
+          echo "detekt_version=$(node -p "require('./packages/detekt/package.json').version")" >> $GITHUB_OUTPUT
+          echo "ktlint_version=$(node -p "require('./packages/ktlint/package.json').version")" >> $GITHUB_OUTPUT
+          echo "ktfmt_version=$(node -p "require('./packages/ktfmt/package.json').version")" >> $GITHUB_OUTPUT
+      
+      - name: Display versions
+        run: |
+          echo "Current versions:"
+          echo "  detekt: ${{ steps.get_versions.outputs.detekt_version }}"
+          echo "  ktlint: ${{ steps.get_versions.outputs.ktlint_version }}"
+          echo "  ktfmt: ${{ steps.get_versions.outputs.ktfmt_version }}"
+          echo "Target version: ${{ github.event.inputs.version }}"
+
+  publish-detekt:
+    needs: check-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Compile
+        run: npm run compile
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Package extension
+        run: |
+          cd packages/detekt
+          npm run package:out
+      
+      - name: Create GitHub Release with VSIX
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          cd packages/detekt
+          gh release create detekt-v${VERSION} dist/detekt-vscode-extension-*.vsix --title "Detekt Extension v${VERSION}" --generate-notes || true
+      
+      - name: Publish to VS Code Marketplace
+        if: secrets.VSCE_PAT != ''
+        run: |
+          cd packages/detekt
+          npm run publish -- --pat ${{ secrets.VSCE_PAT }}
+      
+      - name: Publish to Open VSX
+        if: secrets.OVSX_PAT != ''
+        continue-on-error: true
+        run: |
+          cd packages/detekt
+          npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
+
+  publish-ktlint:
+    needs: check-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Compile
+        run: npm run compile
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Package extension
+        run: |
+          cd packages/ktlint
+          npm run package:out
+      
+      - name: Create GitHub Release with VSIX
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          cd packages/ktlint
+          gh release create ktlint-v${VERSION} dist/ktlint-vscode-extension-*.vsix --title "ktlint Extension v${VERSION}" --generate-notes || true
+      
+      - name: Publish to VS Code Marketplace
+        if: secrets.VSCE_PAT != ''
+        run: |
+          cd packages/ktlint
+          npm run publish -- --pat ${{ secrets.VSCE_PAT }}
+      
+      - name: Publish to Open VSX
+        if: secrets.OVSX_PAT != ''
+        continue-on-error: true
+        run: |
+          cd packages/ktlint
+          npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
+
+  publish-ktfmt:
+    needs: check-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Compile
+        run: npm run compile
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Package extension
+        run: |
+          cd packages/ktfmt
+          npm run package:out
+      
+      - name: Create GitHub Release with VSIX
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          cd packages/ktfmt
+          gh release create ktfmt-v${VERSION} dist/ktfmt-vscode-extension-*.vsix --title "ktfmt Extension v${VERSION}" --generate-notes || true
+      
+      - name: Publish to VS Code Marketplace
+        if: secrets.VSCE_PAT != ''
+        run: |
+          cd packages/ktfmt
+          npm run publish -- --pat ${{ secrets.VSCE_PAT }}
+      
+      - name: Publish to Open VSX
+        if: secrets.OVSX_PAT != ''
+        continue-on-error: true
+        run: |
+          cd packages/ktfmt
+          npx ovsx publish --pat ${{ secrets.OVSX_PAT }}

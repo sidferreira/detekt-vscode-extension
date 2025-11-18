@@ -17,7 +17,9 @@
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "package": "npm run package --workspaces --if-present",
-    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "version:list": "node scripts/version.js --list",
+    "version:set": "node scripts/version.js"
   },
   "devDependencies": {
     "@swc-node/jest": "^1.9.1",

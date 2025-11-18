@@ -176,6 +176,58 @@ npm run lint
 - Add comments for non-obvious code
 - Follow existing code patterns
 
+## Releasing
+
+This repository contains 3 packages that can be released independently or together.
+
+### Version Management
+
+**List current versions:**
+```bash
+npm run version:list
+```
+
+**Update all packages to the same version:**
+```bash
+npm run version:set 0.0.10
+```
+
+### Release Process
+
+#### Option 1: Automatic Release (Recommended)
+
+When you bump the version and push to main, the individual package workflows automatically detect version changes and trigger releases:
+
+1. Update versions: `npm run version:set X.Y.Z`
+2. Review changes: `git diff`
+3. Commit: `git add . && git commit -m "chore: bump version to X.Y.Z"`
+4. Push: `git push origin main`
+5. GitHub Actions will automatically publish changed packages
+
+#### Option 2: Manual Unified Release
+
+Use the "Release All Extensions" workflow to publish all packages at once:
+
+1. Ensure versions are already updated in package.json files
+2. Go to GitHub Actions → "Release All Extensions"
+3. Click "Run workflow"
+4. Enter the version number
+5. All three packages will be built, tested, and published in parallel
+
+### Individual Package Releases
+
+Each package has its own workflow that triggers on changes to its directory:
+- `.github/workflows/publish-detekt.yml`
+- `.github/workflows/publish-ktlint.yml`
+- `.github/workflows/publish-ktfmt.yml`
+
+These workflows automatically:
+- Detect version changes in package.json
+- Compile and test the package
+- Create a GitHub Release with the VSIX file
+- Publish to VS Code Marketplace (if credentials available)
+- Publish to Open VSX (if credentials available)
+
 ## Additional Resources
 
 ### Documentation
@@ -183,6 +235,7 @@ npm run lint
 - [CI/CD Setup](docs/CI_CD_SETUP.md) - Continuous integration and deployment
 - [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
 - [Changelog](CHANGELOG.md) - Version history
+- [Version Script README](scripts/README.md) - Version management utilities
 
 ### External Resources
 - [VSCode Extension API](https://code.visualstudio.com/api)
