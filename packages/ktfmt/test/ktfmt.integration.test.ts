@@ -16,7 +16,7 @@ const mockStatusBarMessage = {
 const mockWorkspaceFolders = [
     {
         uri: { fsPath: path.resolve(__dirname, '..') },
-        name: 'ktfmt-vscode-extension',
+        name: 'very-simple-ktfmt-extension',
         index: 0
     }
 ];
