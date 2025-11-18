@@ -2,7 +2,7 @@
   "name": "ktfmt-vscode-extension",
   "displayName": "ktfmt",
   "description": "Run ktfmt formatter on Kotlin files",
-  "version": "0.0.1",
+  "version": "0.0.10",
   "engines": {
     "vscode": "^1.75.0"
   },
