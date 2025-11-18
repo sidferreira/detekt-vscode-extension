@@ -117,13 +117,13 @@ jobs:
           gh release create detekt-v${VERSION} dist/detekt-vscode-extension-*.vsix --title "Detekt Extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
-        if: ${{ secrets.VSCE_PAT != '' }}
+        if: secrets.VSCE_PAT != ''
         run: |
           cd packages/detekt
           npm run publish -- --pat ${{ secrets.VSCE_PAT }}
       
       - name: Publish to Open VSX
-        if: ${{ secrets.OVSX_PAT != '' }}
+        if: secrets.OVSX_PAT != ''
         continue-on-error: true
         run: |
           cd packages/detekt
@@ -163,13 +163,13 @@ jobs:
           gh release create ktlint-v${VERSION} dist/ktlint-vscode-extension-*.vsix --title "ktlint Extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
-        if: ${{ secrets.VSCE_PAT != '' }}
+        if: secrets.VSCE_PAT != ''
         run: |
           cd packages/ktlint
           npm run publish -- --pat ${{ secrets.VSCE_PAT }}
       
       - name: Publish to Open VSX
-        if: ${{ secrets.OVSX_PAT != '' }}
+        if: secrets.OVSX_PAT != ''
         continue-on-error: true
         run: |
           cd packages/ktlint
@@ -209,13 +209,13 @@ jobs:
           gh release create ktfmt-v${VERSION} dist/ktfmt-vscode-extension-*.vsix --title "ktfmt Extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
-        if: ${{ secrets.VSCE_PAT != '' }}
+        if: secrets.VSCE_PAT != ''
         run: |
           cd packages/ktfmt
           npm run publish -- --pat ${{ secrets.VSCE_PAT }}
       
       - name: Publish to Open VSX
-        if: ${{ secrets.OVSX_PAT != '' }}
+        if: secrets.OVSX_PAT != ''
         continue-on-error: true
         run: |
           cd packages/ktfmt
