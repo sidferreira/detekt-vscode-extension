@@ -30,8 +30,22 @@ jobs:
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           
-          # Check if version was changed in this commit
-          git diff HEAD^ HEAD -- package.json | grep -q '"version"' && echo "should_publish=true" >> $GITHUB_OUTPUT || echo "should_publish=false" >> $GITHUB_OUTPUT
+          # Check if version was changed in this commit (check from repo root)
+          cd ../..
+          # Check if release already exists for this version
+          if gh release view detekt-v${CURRENT_VERSION} &>/dev/null; then
+            echo "Release detekt-v${CURRENT_VERSION} already exists, skipping publish"
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          else
+            # Check if package.json was added or version was changed in this commit
+            if git diff HEAD^ HEAD -- packages/detekt/package.json | grep -q '"version"'; then
+              echo "should_publish=true" >> $GITHUB_OUTPUT
+            else
+              echo "should_publish=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     needs: check-version
