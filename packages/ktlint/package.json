@@ -79,7 +79,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "package": "npx @vscode/vsce package",
-    "package:out": "npx @vscode/vsce package --out ./dist/${npm_package_name}-${npm_package_version}.vsix",
+    "package:out": "npx @vscode/vsce package --out ./dist/${npm_package_name}-v${npm_package_version}.vsix",
     "publish": "npx @vscode/vsce publish"
   },
   "devDependencies": {

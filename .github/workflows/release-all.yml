@@ -59,13 +59,13 @@ jobs:
             SHOULD_PUBLISH=false
             
             # Check if release already exists
-            if gh release view ${pkg}-v${VERSION} &>/dev/null; then
-              echo "Release ${pkg}-v${VERSION} already exists, skipping"
+            if gh release view very-simple-${pkg}-extension-v${VERSION} &>/dev/null; then
+              echo "Release very-simple-${pkg}-extension-v${VERSION} already exists, skipping"
             else
               # Check if version changed in this push or if workflow_dispatch without version
               if [ "${{ github.event_name }}" = "workflow_dispatch" ] || \
                  git diff HEAD^ HEAD -- packages/${pkg}/package.json | grep -q '"version"'; then
-                echo "Will publish ${pkg}-v${VERSION}"
+                echo "Will publish very-simple-${pkg}-extension-v${VERSION}"
                 SHOULD_PUBLISH=true
               fi
             fi
@@ -117,7 +117,7 @@ jobs:
         run: |
           VERSION=${{ needs.check-versions.outputs.detekt_version }}
           cd packages/detekt
-          gh release create detekt-v${VERSION} dist/*.vsix --title "Detekt Extension v${VERSION}" --generate-notes || true
+          gh release create very-simple-detekt-extension-v${VERSION} dist/*.vsix --title "Very simple detekt extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
         if: env.VSCE_PAT != ''
@@ -166,7 +166,7 @@ jobs:
         run: |
           VERSION=${{ needs.check-versions.outputs.ktlint_version }}
           cd packages/ktlint
-          gh release create ktlint-v${VERSION} dist/*.vsix --title "ktlint Extension v${VERSION}" --generate-notes || true
+          gh release create very-simple-ktlint-extension-v${VERSION} dist/*.vsix --title "Very simple ktlint extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
         if: env.VSCE_PAT != ''
@@ -215,7 +215,7 @@ jobs:
         run: |
           VERSION=${{ needs.check-versions.outputs.ktfmt_version }}
           cd packages/ktfmt
-          gh release create ktfmt-v${VERSION} dist/*.vsix --title "ktfmt Extension v${VERSION}" --generate-notes || true
+          gh release create very-simple-ktfmt-extension-v${VERSION} dist/*.vsix --title "Very simple ktfmt extension v${VERSION}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
         if: env.VSCE_PAT != ''
