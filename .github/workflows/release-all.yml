@@ -59,13 +59,13 @@ jobs:
             SHOULD_PUBLISH=false
             
             # Check if release already exists
-            if gh release view ${pkg}-v${VERSION} &>/dev/null; then
-              echo "Release ${pkg}-v${VERSION} already exists, skipping"
+            if gh release view very-simple-${pkg}-extension-v${VERSION} &>/dev/null; then
+              echo "Release very-simple-${pkg}-extension-v${VERSION} already exists, skipping"
             else
               # Check if version changed in this push or if workflow_dispatch without version
               if [ "${{ github.event_name }}" = "workflow_dispatch" ] || \
                  git diff HEAD^ HEAD -- packages/${pkg}/package.json | grep -q '"version"'; then
-                echo "Will publish ${pkg}-v${VERSION}"
+                echo "Will publish very-simple-${pkg}-extension-v${VERSION}"
                 SHOULD_PUBLISH=true
               fi
             fi
@@ -86,146 +86,35 @@ jobs:
   publish-detekt:
     needs: check-versions
     if: needs.check-versions.outputs.publish_detekt == 'true'
-    runs-on: ubuntu-latest
-    env:
+    uses: ./.github/workflows/publish-extension.yml
+    with:
+      package_name: detekt
+      version: ${{ needs.check-versions.outputs.detekt_version }}
+    secrets:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Compile
-        run: npm run compile
-      
-      - name: Run tests
-        run: npm test
-      
-      - name: Package extension
-        run: |
-          cd packages/detekt
-          npm run package:out
-      
-      - name: Create GitHub Release with VSIX
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=${{ needs.check-versions.outputs.detekt_version }}
-          cd packages/detekt
-          gh release create detekt-v${VERSION} dist/detekt-vscode-extension-*.vsix --title "Detekt Extension v${VERSION}" --generate-notes || true
-      
-      - name: Publish to VS Code Marketplace
-        if: env.VSCE_PAT != ''
-        run: |
-          cd packages/detekt
-          npm run publish -- --pat ${{ secrets.VSCE_PAT }}
-      
-      - name: Publish to Open VSX
-        if: env.OVSX_PAT != ''
-        continue-on-error: true
-        run: |
-          cd packages/detekt
-          npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-ktlint:
     needs: check-versions
     if: needs.check-versions.outputs.publish_ktlint == 'true'
-    runs-on: ubuntu-latest
-    env:
+    uses: ./.github/workflows/publish-extension.yml
+    with:
+      package_name: ktlint
+      version: ${{ needs.check-versions.outputs.ktlint_version }}
+    secrets:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Compile
-        run: npm run compile
-      
-      - name: Run tests
-        run: npm test
-      
-      - name: Package extension
-        run: |
-          cd packages/ktlint
-          npm run package:out
-      
-      - name: Create GitHub Release with VSIX
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=${{ needs.check-versions.outputs.ktlint_version }}
-          cd packages/ktlint
-          gh release create ktlint-v${VERSION} dist/ktlint-vscode-extension-*.vsix --title "ktlint Extension v${VERSION}" --generate-notes || true
-      
-      - name: Publish to VS Code Marketplace
-        if: env.VSCE_PAT != ''
-        run: |
-          cd packages/ktlint
-          npm run publish -- --pat ${{ secrets.VSCE_PAT }}
-      
-      - name: Publish to Open VSX
-        if: env.OVSX_PAT != ''
-        continue-on-error: true
-        run: |
-          cd packages/ktlint
-          npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-ktfmt:
     needs: check-versions
     if: needs.check-versions.outputs.publish_ktfmt == 'true'
-    runs-on: ubuntu-latest
-    env:
+    uses: ./.github/workflows/publish-extension.yml
+    with:
+      package_name: ktfmt
+      version: ${{ needs.check-versions.outputs.ktfmt_version }}
+    secrets:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Compile
-        run: npm run compile
-      
-      - name: Run tests
-        run: npm test
-      
-      - name: Package extension
-        run: |
-          cd packages/ktfmt
-          npm run package:out
-      
-      - name: Create GitHub Release with VSIX
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=${{ needs.check-versions.outputs.ktfmt_version }}
-          cd packages/ktfmt
-          gh release create ktfmt-v${VERSION} dist/ktfmt-vscode-extension-*.vsix --title "ktfmt Extension v${VERSION}" --generate-notes || true
-      
-      - name: Publish to VS Code Marketplace
-        if: env.VSCE_PAT != ''
-        run: |
-          cd packages/ktfmt
-          npm run publish -- --pat ${{ secrets.VSCE_PAT }}
-      
-      - name: Publish to Open VSX
-        if: env.OVSX_PAT != ''
-        continue-on-error: true
-        run: |
-          cd packages/ktfmt
-          npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
