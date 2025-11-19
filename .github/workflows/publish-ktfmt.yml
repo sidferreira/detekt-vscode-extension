@@ -33,11 +33,11 @@ jobs:
           # Check if version was changed in this commit (check from repo root)
           cd ../..
           # Check if release already exists for this version
-          if gh release view ktfmt-v${CURRENT_VERSION} &>/dev/null; then
-            echo "Release ktfmt-v${CURRENT_VERSION} already exists, skipping publish"
+          if gh release view very-simple-ktfmt-extension-v${CURRENT_VERSION} &>/dev/null; then
+            echo "Release very-simple-ktfmt-extension-v${CURRENT_VERSION} already exists, skipping publish"
             echo "should_publish=false" >> $GITHUB_OUTPUT
           else
-            echo "Release ktfmt-v${CURRENT_VERSION} does not exist"
+            echo "Release very-simple-ktfmt-extension-v${CURRENT_VERSION} does not exist"
             # Check if package.json was added or version was changed in this commit
             if git diff HEAD^ HEAD -- packages/ktfmt/package.json | grep -q '"version"'; then
               echo "Version changed in this commit, will publish"
@@ -53,45 +53,11 @@ jobs:
   publish:
     needs: check-version
     if: needs.check-version.outputs.should_publish == 'true' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Compile
-        run: npm run compile
-      
-      - name: Run tests
-        run: npm test
-      
-      - name: Package extension
-        run: |
-          cd packages/ktfmt
-          npm run package:out
-      
-      - name: Create GitHub Release with VSIX
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=${{ needs.check-version.outputs.version }}
-          cd packages/ktfmt
-          gh release create ktfmt-v${VERSION} dist/ktfmt-vscode-extension-*.vsix --title "ktfmt Extension v${VERSION}" --generate-notes || true
-      
-      - name: Publish to VS Code Marketplace
-        if: secrets.VSCE_PAT != ''
-        run: |
-          cd packages/ktfmt
-          npm run publish -- --pat ${{ secrets.VSCE_PAT }}
-      
-      - name: Publish to Open VSX
-        if: secrets.OVSX_PAT != ''
-        continue-on-error: true
-        run: |
-          cd packages/ktfmt
-          npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
+    uses: ./.github/workflows/publish-extension.yml
+    with:
+      package_name: ktfmt
+      version: ${{ needs.check-version.outputs.version }}
+    secrets:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

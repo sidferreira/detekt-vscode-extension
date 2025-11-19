@@ -1,0 +1,64 @@
+name: Publish Extension (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        required: true
+        type: string
+        description: 'Package name (e.g., detekt, ktlint, ktfmt)'
+      version:
+        required: true
+        type: string
+        description: 'Version to publish'
+    secrets:
+      VSCE_PAT:
+        required: true
+      OVSX_PAT:
+        required: false
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Compile
+        run: npm run compile
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Package extension
+        run: |
+          cd packages/${{ inputs.package_name }}
+          npm run package:out
+      
+      - name: Create GitHub Release with VSIX
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd packages/${{ inputs.package_name }}
+          gh release create very-simple-${{ inputs.package_name }}-extension-v${{ inputs.version }} dist/*.vsix --title "Very simple ${{ inputs.package_name }} extension v${{ inputs.version }}" --generate-notes || true
+      
+      - name: Publish to VS Code Marketplace
+        if: secrets.VSCE_PAT != ''
+        run: |
+          cd packages/${{ inputs.package_name }}
+          npm run publish -- --pat ${{ secrets.VSCE_PAT }}
+      
+      - name: Publish to Open VSX
+        if: secrets.OVSX_PAT != ''
+        continue-on-error: true
+        run: |
+          cd packages/${{ inputs.package_name }}
+          npx ovsx publish --pat ${{ secrets.OVSX_PAT }}
