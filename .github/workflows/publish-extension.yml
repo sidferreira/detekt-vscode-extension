@@ -54,7 +54,7 @@ jobs:
           gh release create very-simple-${{ inputs.package_name }}-extension-v${{ inputs.version }} dist/*.vsix --title "Very simple ${{ inputs.package_name }} extension v${{ inputs.version }}" --generate-notes || true
       
       - name: Publish to VS Code Marketplace
-        if: ${{ secrets.VSCE_PAT != '' }}
+        if: ${{ env.VSCE_PAT != '' }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
@@ -62,7 +62,7 @@ jobs:
           npm run publish -- --pat $VSCE_PAT
       
       - name: Publish to Open VSX
-        if: ${{ secrets.OVSX_PAT != '' }}
+        if: ${{ env.OVSX_PAT != '' }}
         continue-on-error: true
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
