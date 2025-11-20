@@ -2,7 +2,7 @@
   "name": "very-simple-detekt-extension",
   "displayName": "Very simple detekt extension",
   "description": "Run detekt analysis on Kotlin files and display results in Problems panel",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "engines": {
     "vscode": "^1.75.0"
   },

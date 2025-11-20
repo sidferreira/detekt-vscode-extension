@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: [detekt, ktfmt, ktlint]
+        package: [detekt, ktlint]
     steps:
       - uses: actions/checkout@v4
       
