@@ -6,7 +6,7 @@ on:
       package_name:
         required: true
         type: string
-        description: 'Package name (e.g., detekt, ktlint, ktfmt)'
+        description: 'Package name (e.g., detekt, ktlint)'
       version:
         required: true
         type: string
