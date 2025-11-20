@@ -93,7 +93,6 @@ jobs:
     secrets:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-ktlint:
     needs: check-versions
@@ -105,7 +104,6 @@ jobs:
     secrets:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-ktfmt:
     needs: check-versions
@@ -117,4 +115,3 @@ jobs:
     secrets:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
