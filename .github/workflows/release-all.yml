@@ -23,10 +23,8 @@ jobs:
     outputs:
       detekt_version: ${{ steps.get_versions.outputs.detekt_version }}
       ktlint_version: ${{ steps.get_versions.outputs.ktlint_version }}
-      ktfmt_version: ${{ steps.get_versions.outputs.ktfmt_version }}
       publish_detekt: ${{ steps.check_changes.outputs.publish_detekt }}
       publish_ktlint: ${{ steps.check_changes.outputs.publish_ktlint }}
-      publish_ktfmt: ${{ steps.check_changes.outputs.publish_ktfmt }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,7 +35,6 @@ jobs:
         run: |
           echo "detekt_version=$(node -p "require('./packages/detekt/package.json').version")" >> $GITHUB_OUTPUT
           echo "ktlint_version=$(node -p "require('./packages/ktlint/package.json').version")" >> $GITHUB_OUTPUT
-          echo "ktfmt_version=$(node -p "require('./packages/ktfmt/package.json').version")" >> $GITHUB_OUTPUT
       
       - name: Check what should be published
         id: check_changes
@@ -49,12 +46,11 @@ jobs:
             echo "Manual trigger with version, publishing all"
             echo "publish_detekt=true" >> $GITHUB_OUTPUT
             echo "publish_ktlint=true" >> $GITHUB_OUTPUT
-            echo "publish_ktfmt=true" >> $GITHUB_OUTPUT
             exit 0
           fi
           
           # Check each package
-          for pkg in detekt ktlint ktfmt; do
+          for pkg in detekt ktlint; do
             VERSION=$(node -p "require('./packages/${pkg}/package.json').version")
             SHOULD_PUBLISH=false
             
@@ -78,7 +74,6 @@ jobs:
           echo "Current versions:"
           echo "  detekt: ${{ steps.get_versions.outputs.detekt_version }} (publish: ${{ steps.check_changes.outputs.publish_detekt }})"
           echo "  ktlint: ${{ steps.get_versions.outputs.ktlint_version }} (publish: ${{ steps.check_changes.outputs.publish_ktlint }})"
-          echo "  ktfmt: ${{ steps.get_versions.outputs.ktfmt_version }} (publish: ${{ steps.check_changes.outputs.publish_ktfmt }})"
           if [ -n "${{ github.event.inputs.version }}" ]; then
             echo "Target version (manual): ${{ github.event.inputs.version }}"
           fi
@@ -101,17 +96,6 @@ jobs:
     with:
       package_name: ktlint
       version: ${{ needs.check-versions.outputs.ktlint_version }}
-    secrets:
-      VSCE_PAT: ${{ secrets.VSCE_PAT }}
-      OVSX_PAT: ${{ secrets.OVSX_PAT }}
-
-  publish-ktfmt:
-    needs: check-versions
-    if: needs.check-versions.outputs.publish_ktfmt == 'true'
-    uses: ./.github/workflows/publish-extension.yml
-    with:
-      package_name: ktfmt
-      version: ${{ needs.check-versions.outputs.ktfmt_version }}
     secrets:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
