@@ -16,8 +16,6 @@ on:
         required: true
       OVSX_PAT:
         required: false
-      GITHUB_TOKEN:
-        required: true
 
 permissions:
   contents: write
@@ -48,7 +46,7 @@ jobs:
       
       - name: Create GitHub Release with VSIX
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           cd packages/${{ inputs.package_name }}
           gh release create very-simple-${{ inputs.package_name }}-extension-v${{ inputs.version }} dist/*.vsix --title "Very simple ${{ inputs.package_name }} extension v${{ inputs.version }}" --generate-notes || true
