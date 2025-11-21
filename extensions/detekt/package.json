@@ -1,5 +1,7 @@
 {
   "name": "very-simple-detekt-extension",
+  "displayName": "Very simple Detekt extension",
+  "icon": "icon.png",
   "version": "0.0.12",
   "engines": {
     "vscode": "^1.75.0"
