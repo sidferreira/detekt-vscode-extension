@@ -36,7 +36,7 @@ Examples:
     console.log(`\nCurrent versions:`);
     console.log(`  root: ${rootPkg.version}`);
     ['detekt', 'ktlint'].forEach(ext => {
-      const pkg = JSON.parse(fs.readFileSync(`./${ext}/package.json`, 'utf-8'));
+      const pkg = JSON.parse(fs.readFileSync(`./extensions/${ext}/package.json`, 'utf-8'));
       console.log(`  ${ext}: ${pkg.version}`);
     });
     console.log('');
@@ -61,9 +61,9 @@ Examples:
   fs.writeFileSync(rootPkgPath, JSON.stringify(rootPkg, null, 2) + '\n');
   console.log(`✓ Updated root: ${oldVersion} → ${newVersion}`);
   
-  // Update extensions
+  // Update extension package.json files
   ['detekt', 'ktlint'].forEach(ext => {
-    const pkgPath = `./${ext}/package.json`;
+    const pkgPath = `./extensions/${ext}/package.json`;
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
     pkg.version = newVersion;
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
