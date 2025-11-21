@@ -1,14 +1,16 @@
 # Node
 node_modules/
-packages/*/node_modules/
 
 # Build output
 dist/
 out/
 build/
-packages/*/dist/
-packages/*/out/
-packages/*/build/
+detekt/dist/
+detekt/build/
+detekt/out/
+ktlint/dist/
+ktlint/build/
+ktlint/out/
 
 # VS Code
 .vscode/
@@ -24,14 +26,16 @@ yarn-error.log*
 
 # VSIX packages
 *.vsix
-packages/*/*.vsix
+detekt/*.vsix
+ktlint/*.vsix
 
 # Coverage
 coverage/
 
 # Test results
 test-results/
-packages/*/test-results/
+detekt/test-results/
+ktlint/test-results/
 
 # TypeScript
 *.tsbuildinfo
