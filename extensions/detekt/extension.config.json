@@ -1,5 +1,5 @@
 {
-  "displayName": "Very simple detekt extension",
+  "displayName": "Very simple Detekt extension",
   "description": "Run detekt analysis on Kotlin files and display results in Problems panel",
   "keywords": ["kotlin", "detekt", "linter", "code analysis"],
   "categories": ["Linters", "Programming Languages"],
