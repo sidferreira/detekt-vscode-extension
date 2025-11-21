@@ -1,6 +1,6 @@
 {
   "name": "kotlin-tooling-extensions",
-  "version": "0.0.12",
+  "version": "0.0.14",
   "private": true,
   "description": "Kotlin extensions for VSCode: detekt and ktlint",
   "repository": {
