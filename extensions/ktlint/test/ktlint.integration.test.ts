@@ -132,7 +132,7 @@ describe('ktlint Integration Test Suite', () => {
         
         expect(mockVscode.languages.createDiagnosticCollection).toHaveBeenCalledWith('ktlint');
         expect(mockVscode.window.createOutputChannel).toHaveBeenCalledWith('ktlint');
-        expect(mockOutputChannel.appendLine).toHaveBeenCalledWith('ktlint extension is now active');
+        expect(mockOutputChannel.appendLine).toHaveBeenCalledWith('Very simple ktlint extension is now active');
     });
 
     test('parseKtlintOutput function parses real ktlint output correctly', async () => {
