@@ -289,7 +289,7 @@ describe('Detekt Integration Test Suite', () => {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Verify that the analysis ran
-        expect(mockOutputChannel.appendLine).toHaveBeenCalledWith('Very simple detekt extension is now active');
+        expect(mockOutputChannel.appendLine).toHaveBeenCalledWith('Very simple Detekt extension is now active');
         expect(mockDiagnosticCollection.clear).toHaveBeenCalled();
     }, 30000);
 
