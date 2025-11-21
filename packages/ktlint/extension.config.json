@@ -1,0 +1,10 @@
+{
+  "displayName": "ktlint",
+  "description": "Run ktlint analysis on Kotlin files and display results in Problems panel",
+  "keywords": ["kotlin", "ktlint", "linter", "code analysis"],
+  "categories": ["Linters", "Programming Languages"],
+  "commandIds": ["ktlint.runAnalysis", "ktlint.formatDocument"],
+  "outputChannelName": "ktlint",
+  "configurationPrefix": "ktlint",
+  "publisher": "SidFerreira"
+}
