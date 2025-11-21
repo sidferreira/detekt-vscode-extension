@@ -1,23 +1,38 @@
 import * as vscode from 'vscode';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
+import { readFileSync } from 'fs';
+
+interface ExtensionConfig {
+    displayName: string;
+    outputChannelName: string;
+    configurationPrefix: string;
+    commandId?: string;
+    commandIds?: string[];
+}
 
 let diagnosticCollection: vscode.DiagnosticCollection;
 let outputChannel: vscode.OutputChannel;
 let runningProcess: ChildProcess | null = null;
 
+function loadExtensionConfig(): ExtensionConfig {
+    const configPath = path.join(__dirname, '..', 'extension.config.json');
+    return JSON.parse(readFileSync(configPath, 'utf-8'));
+}
+
 export function activate(context: vscode.ExtensionContext) {
-    outputChannel = vscode.window.createOutputChannel('ktlint');
+    const config = loadExtensionConfig();
+    outputChannel = vscode.window.createOutputChannel(config.outputChannelName);
     context.subscriptions.push(outputChannel);
     
-    outputChannel.appendLine('ktlint extension is now active');
+    outputChannel.appendLine(`${config.displayName} is now active`);
 
     // Create diagnostic collection
-    diagnosticCollection = vscode.languages.createDiagnosticCollection('ktlint');
+    diagnosticCollection = vscode.languages.createDiagnosticCollection(config.configurationPrefix);
     context.subscriptions.push(diagnosticCollection);
 
     // Register command for manual analysis
-    const runAnalysisCommand = vscode.commands.registerCommand('ktlint.runAnalysis', async () => {
+    const runAnalysisCommand = vscode.commands.registerCommand(config.commandIds?.[0] || 'ktlint.runAnalysis', async () => {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
             vscode.window.showErrorMessage('No workspace folder open');
@@ -27,7 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     // Register command for formatting document
-    const formatDocumentCommand = vscode.commands.registerCommand('ktlint.formatDocument', async () => {
+    const formatDocumentCommand = vscode.commands.registerCommand(config.commandIds?.[1] || 'ktlint.formatDocument', async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             vscode.window.showErrorMessage('No active editor');
@@ -44,10 +59,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register on-save listener
     const onSaveListener = vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
-        const config = vscode.workspace.getConfiguration('ktlint');
-        const enabled = config.get<boolean>('enable', true);
-        const runOnSave = config.get<boolean>('runOnSave', true);
-        const formatOnSave = config.get<boolean>('formatOnSave', false);
+        const wsConfig = vscode.workspace.getConfiguration(config.configurationPrefix);
+        const enabled = wsConfig.get<boolean>('enable', true);
+        const runOnSave = wsConfig.get<boolean>('runOnSave', true);
+        const formatOnSave = wsConfig.get<boolean>('formatOnSave', false);
 
         if (!enabled) {
             return;
@@ -69,9 +84,10 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 async function runKtlint(workspacePath: string, specificFile?: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration('ktlint');
-    const ktlintPath = config.get<string>('executablePath', 'ktlint');
-    const extraArgs = config.get<string[]>('args', []);
+    const config = loadExtensionConfig();
+    const wsConfig = vscode.workspace.getConfiguration(config.configurationPrefix);
+    const ktlintPath = wsConfig.get<string>('executablePath', 'ktlint');
+    const extraArgs = wsConfig.get<string[]>('args', []);
 
     // Cancel any running process
     if (runningProcess) {
@@ -162,9 +178,10 @@ async function runKtlint(workspacePath: string, specificFile?: string): Promise<
 }
 
 async function formatFile(filePath: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration('ktlint');
-    const ktlintPath = config.get<string>('executablePath', 'ktlint');
-    const extraArgs = config.get<string[]>('args', []);
+    const config = loadExtensionConfig();
+    const wsConfig = vscode.workspace.getConfiguration(config.configurationPrefix);
+    const ktlintPath = wsConfig.get<string>('executablePath', 'ktlint');
+    const extraArgs = wsConfig.get<string[]>('args', []);
 
     // Cancel any running process
     if (runningProcess) {
