@@ -1,42 +1,21 @@
 #!/usr/bin/env node
 
 /**
- * Version management script for the monorepo
- * Updates version in all package.json files
+ * Version management script for extensions
+ * Updates version in root and all extension package.json files
  */
 
 const fs = require('fs');
 const path = require('path');
-
-const PACKAGES = ['detekt', 'ktlint', 'ktfmt'];
-
-function updateVersion(packageName, version) {
-  const packagePath = path.join(__dirname, '..', 'packages', packageName, 'package.json');
-  const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-  
-  const oldVersion = packageJson.version;
-  packageJson.version = version;
-  
-  fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2) + '\n');
-  console.log(`✓ Updated ${packageName}: ${oldVersion} → ${version}`);
-  
-  return oldVersion;
-}
-
-function getCurrentVersion(packageName) {
-  const packagePath = path.join(__dirname, '..', 'packages', packageName, 'package.json');
-  const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-  return packageJson.version;
-}
 
 function main() {
   const args = process.argv.slice(2);
   
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
     console.log(`
-Usage: node scripts/version.js [VERSION]
+Usage: npm run version:set <VERSION>
 
-Update version for all packages in the monorepo.
+Update version in root and all extension package.json files.
 
 Arguments:
   VERSION    The new version to set (e.g., 0.0.10)
@@ -46,18 +25,21 @@ Options:
   --list, -l List current versions
 
 Examples:
-  node scripts/version.js 0.0.10
-  node scripts/version.js --list
+  npm run version:set 0.0.10
+  npm run version:list
 `);
     return;
   }
   
   if (args[0] === '--list' || args[0] === '-l') {
-    console.log('Current versions:');
-    PACKAGES.forEach(pkg => {
-      const version = getCurrentVersion(pkg);
-      console.log(`  ${pkg}: ${version}`);
+    const rootPkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
+    console.log(`\nCurrent versions:`);
+    console.log(`  root: ${rootPkg.version}`);
+    ['detekt', 'ktlint'].forEach(ext => {
+      const pkg = JSON.parse(fs.readFileSync(`./extensions/${ext}/package.json`, 'utf-8'));
+      console.log(`  ${ext}: ${pkg.version}`);
     });
+    console.log('');
     return;
   }
   
@@ -69,17 +51,31 @@ Examples:
     process.exit(1);
   }
   
-  console.log(`Updating all packages to version ${newVersion}...\n`);
+  console.log(`Updating all versions to ${newVersion}...\n`);
   
-  PACKAGES.forEach(pkg => {
-    updateVersion(pkg, newVersion);
+  // Update root
+  const rootPkgPath = './package.json';
+  const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8'));
+  const oldVersion = rootPkg.version;
+  rootPkg.version = newVersion;
+  fs.writeFileSync(rootPkgPath, JSON.stringify(rootPkg, null, 2) + '\n');
+  console.log(`✓ Updated root: ${oldVersion} → ${newVersion}`);
+  
+  // Update extension package.json files
+  ['detekt', 'ktlint'].forEach(ext => {
+    const pkgPath = `./extensions/${ext}/package.json`;
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    pkg.version = newVersion;
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+    console.log(`✓ Updated ${ext}: ${oldVersion} → ${newVersion}`);
   });
   
-  console.log('\n✓ All packages updated successfully!');
+  console.log('\n✓ All versions updated successfully!');
   console.log('\nNext steps:');
-  console.log('  1. Review the changes: git diff');
-  console.log('  2. Commit: git add . && git commit -m "chore: bump version to ' + newVersion + '"');
-  console.log('  3. Push to trigger releases: git push');
+  console.log('  git add .');
+  console.log(`  git commit -m "chore: bump version to ${newVersion}"`);
+  console.log('  git push');
 }
 
 main();
+

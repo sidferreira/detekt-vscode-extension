@@ -1,23 +1,38 @@
 import * as vscode from 'vscode';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
+import { readFileSync } from 'fs';
+
+interface ExtensionConfig {
+    displayName: string;
+    outputChannelName: string;
+    configurationPrefix: string;
+    commandId?: string;
+    commandIds?: string[];
+}
 
 let diagnosticCollection: vscode.DiagnosticCollection;
 let outputChannel: vscode.OutputChannel;
 let runningProcess: ChildProcess | null = null;
 
+function loadExtensionConfig(): ExtensionConfig {
+    const configPath = path.join(__dirname, '..', 'extension.config.json');
+    return JSON.parse(readFileSync(configPath, 'utf-8'));
+}
+
 export function activate(context: vscode.ExtensionContext) {
-    outputChannel = vscode.window.createOutputChannel('Detekt');
+    const config = loadExtensionConfig();
+    outputChannel = vscode.window.createOutputChannel(config.outputChannelName);
     context.subscriptions.push(outputChannel);
     
-    outputChannel.appendLine('Detekt extension is now active');
+    outputChannel.appendLine(`${config.displayName} is now active`);
 
     // Create diagnostic collection
-    diagnosticCollection = vscode.languages.createDiagnosticCollection('detekt');
+    diagnosticCollection = vscode.languages.createDiagnosticCollection(config.configurationPrefix);
     context.subscriptions.push(diagnosticCollection);
 
     // Register command for manual analysis
-    const runAnalysisCommand = vscode.commands.registerCommand('detekt.runAnalysis', async () => {
+    const runAnalysisCommand = vscode.commands.registerCommand(config.commandId || 'detekt.runAnalysis', async () => {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
             vscode.window.showErrorMessage('No workspace folder open');
@@ -28,9 +43,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register on-save listener
     const onSaveListener = vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
-        const config = vscode.workspace.getConfiguration('detekt');
-        const enabled = config.get<boolean>('enable', true);
-        const runOnSave = config.get<boolean>('runOnSave', true);
+        const wsConfig = vscode.workspace.getConfiguration(config.configurationPrefix);
+        const enabled = wsConfig.get<boolean>('enable', true);
+        const runOnSave = wsConfig.get<boolean>('runOnSave', true);
 
         if (!enabled || !runOnSave) {
             return;
@@ -48,9 +63,10 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 async function runDetekt(workspacePath: string, specificFile?: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration('detekt');
-    const detektPath = config.get<string>('executablePath', 'detekt');
-    const extraArgs = config.get<string[]>('args', []);
+    const config = loadExtensionConfig();
+    const wsConfig = vscode.workspace.getConfiguration(config.configurationPrefix);
+    const detektPath = wsConfig.get<string>('executablePath', 'detekt');
+    const extraArgs = wsConfig.get<string[]>('args', []);
 
     // Cancel any running process
     if (runningProcess) {

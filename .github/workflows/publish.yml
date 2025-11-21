@@ -1,0 +1,155 @@
+name: Publish Extensions
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'extensions/detekt/package.json'
+      - 'extensions/ktlint/package.json'
+      - '.github/workflows/publish.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      detekt_version: ${{ steps.versions.outputs.detekt_version }}
+      ktlint_version: ${{ steps.versions.outputs.ktlint_version }}
+      detekt_changed: ${{ steps.changes.outputs.detekt_changed }}
+      ktlint_changed: ${{ steps.changes.outputs.ktlint_changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Get current versions
+        id: versions
+        run: |
+          echo "detekt_version=$(node -p "require('./extensions/detekt/package.json').version")" >> $GITHUB_OUTPUT
+          echo "ktlint_version=$(node -p "require('./extensions/ktlint/package.json').version")" >> $GITHUB_OUTPUT
+      
+      - name: Check what changed
+        id: changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for pkg in detekt ktlint; do
+            VERSION=$(node -p "require('./extensions/${pkg}/package.json').version")
+            SHOULD_PUBLISH=false
+            
+            # Check if release already exists
+            if gh release view very-simple-${pkg}-extension-v${VERSION} &>/dev/null; then
+              echo "Release very-simple-${pkg}-extension-v${VERSION} already exists, skipping"
+            else
+              # Check if version changed in this commit or workflow_dispatch
+              if [ "${{ github.event_name }}" = "workflow_dispatch" ] || \
+                 git diff HEAD^ HEAD -- extensions/${pkg}/package.json | grep -q '"version"'; then
+                echo "Will publish very-simple-${pkg}-extension-v${VERSION}"
+                SHOULD_PUBLISH=true
+              fi
+            fi
+            
+            echo "${pkg}_changed=${SHOULD_PUBLISH}" >> $GITHUB_OUTPUT
+          done
+
+  publish-detekt:
+    needs: check-versions
+    if: needs.check-versions.outputs.detekt_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Compile
+        run: npm run compile
+      
+      - name: Test
+        run: npm run test
+      
+      - name: Package extension
+        run: |
+          cd extensions/detekt
+          npm run package:out
+      
+      - name: Create GitHub Release with VSIX
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd extensions/detekt
+          gh release create very-simple-detekt-extension-v${{ needs.check-versions.outputs.detekt_version }} dist/*.vsix --title "Very simple detekt extension v${{ needs.check-versions.outputs.detekt_version }}" --generate-notes || true
+      
+      - name: Publish to VS Code Marketplace
+        if: ${{ secrets.VSCE_PAT != '' }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          cd extensions/detekt
+          npm run publish -- --pat $VSCE_PAT
+      
+      - name: Publish to Open VSX
+        if: ${{ secrets.OVSX_PAT != '' }}
+        continue-on-error: true
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          cd extensions/detekt
+          npx ovsx publish --pat $OVSX_PAT
+
+  publish-ktlint:
+    needs: check-versions
+    if: needs.check-versions.outputs.ktlint_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Compile
+        run: npm run compile
+      
+      - name: Test
+        run: npm run test
+      
+      - name: Package extension
+        run: |
+          cd extensions/ktlint
+          npm run package:out
+      
+      - name: Create GitHub Release with VSIX
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd extensions/ktlint
+          gh release create very-simple-ktlint-extension-v${{ needs.check-versions.outputs.ktlint_version }} dist/*.vsix --title "Very simple ktlint extension v${{ needs.check-versions.outputs.ktlint_version }}" --generate-notes || true
+      
+      - name: Publish to VS Code Marketplace
+        if: ${{ secrets.VSCE_PAT != '' }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          cd extensions/ktlint
+          npm run publish -- --pat $VSCE_PAT
+      
+      - name: Publish to Open VSX
+        if: ${{ secrets.OVSX_PAT != '' }}
+        continue-on-error: true
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          cd extensions/ktlint
+          npx ovsx publish --pat $OVSX_PAT

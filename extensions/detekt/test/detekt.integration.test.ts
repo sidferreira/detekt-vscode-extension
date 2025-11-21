@@ -141,7 +141,7 @@ describe('Detekt Integration Test Suite', () => {
         // Verify that the extension registered the necessary components
         expect(mockVscode.languages.createDiagnosticCollection).toHaveBeenCalledWith('detekt');
         expect(mockVscode.window.createOutputChannel).toHaveBeenCalledWith('Detekt');
-        expect(mockOutputChannel.appendLine).toHaveBeenCalledWith('Detekt extension is now active');
+        expect(mockOutputChannel.appendLine).toHaveBeenCalledWith('Very simple detekt extension is now active');
     });
 
     test('parseDetektOutput function parses real detekt output correctly', async () => {
@@ -289,7 +289,7 @@ describe('Detekt Integration Test Suite', () => {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Verify that the analysis ran
-        expect(mockOutputChannel.appendLine).toHaveBeenCalledWith('Detekt extension is now active');
+        expect(mockOutputChannel.appendLine).toHaveBeenCalledWith('Very simple detekt extension is now active');
         expect(mockDiagnosticCollection.clear).toHaveBeenCalled();
     }, 30000);
 

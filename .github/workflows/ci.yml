@@ -14,9 +14,6 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package: [detekt, ktlint]
     steps:
       - uses: actions/checkout@v4
       
@@ -27,17 +24,11 @@ jobs:
       - name: Install dependencies
         run: npm install
       
-      - name: Compile ${{ matrix.package }}
-        run: |
-          cd packages/${{ matrix.package }}
-          npm run compile
+      - name: Compile extensions
+        run: npm run compile
       
-      - name: Lint ${{ matrix.package }}
-        run: |
-          cd packages/${{ matrix.package }}
-          npm run lint
+      - name: Lint extensions
+        run: npm run lint
       
-      - name: Test ${{ matrix.package }}
-        run: |
-          cd packages/${{ matrix.package }}
-          npm test
+      - name: Test extensions
+        run: npm run test

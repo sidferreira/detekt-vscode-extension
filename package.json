@@ -1,23 +1,20 @@
 {
-  "name": "kotlin-tooling-extensions-monorepo",
+  "name": "kotlin-tooling-extensions",
   "version": "0.0.11",
   "private": true,
-  "description": "Monorepo for Kotlin tooling extensions: detekt, ktfmt, and ktlint",
+  "description": "Kotlin extensions for VSCode: detekt and ktlint",
   "repository": {
     "type": "git",
     "url": "https://github.com/sidferreira/detekt-vscode-extension"
   },
   "license": "MIT",
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "compile": "npm run compile --workspaces --if-present",
-    "watch": "npm run watch --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "package": "npm run package --workspaces --if-present",
-    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "compile": "npm run compile --prefix extensions/detekt && npm run compile --prefix extensions/ktlint",
+    "watch": "npm run watch --prefix extensions/detekt & npm run watch --prefix extensions/ktlint",
+    "lint": "npm run lint --prefix extensions/detekt && npm run lint --prefix extensions/ktlint",
+    "test": "npm run test --prefix extensions/detekt && npm run test --prefix extensions/ktlint",
+    "test:watch": "npm run test:watch --prefix extensions/detekt & npm run test:watch --prefix extensions/ktlint",
+    "test:coverage": "npm run test:coverage --prefix extensions/detekt && npm run test:coverage --prefix extensions/ktlint",
     "version:list": "node scripts/version.js --list",
     "version:set": "node scripts/version.js"
   },
