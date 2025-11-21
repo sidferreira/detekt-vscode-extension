@@ -3,7 +3,7 @@
   "description": "Run detekt analysis on Kotlin files and display results in Problems panel",
   "keywords": ["kotlin", "detekt", "linter", "code analysis"],
   "categories": ["Linters", "Programming Languages"],
-  "icon": "detekt-logo.png",
+  "icon": "icon.png",
   "galleryBanner": {
     "color": "#1e1e1e",
     "theme": "dark"

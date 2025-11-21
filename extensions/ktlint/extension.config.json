@@ -1,8 +1,9 @@
 {
-  "displayName": "Very simple ktlint extension",
+  "displayName": "Very simple Ktlint extension",
   "description": "Run ktlint analysis on Kotlin files and display results in Problems panel",
   "keywords": ["kotlin", "ktlint", "linter", "code analysis"],
   "categories": ["Linters", "Programming Languages"],
+  "icon": "icon.png",
   "commandIds": ["ktlint.runAnalysis", "ktlint.formatDocument"],
   "outputChannelName": "ktlint",
   "configurationPrefix": "ktlint",

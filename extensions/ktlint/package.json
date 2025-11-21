@@ -2,7 +2,7 @@
   "name": "Very simple Ktlint extension",
   "displayName": "Very simple Ktlint extension",
   "icon": "icon.png",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "engines": {
     "vscode": "^1.75.0"
   },
