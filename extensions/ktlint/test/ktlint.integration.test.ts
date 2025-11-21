@@ -245,7 +245,7 @@ describe('ktlint Integration Test Suite', () => {
         await runAnalysisCommand();
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        expect(mockOutputChannel.appendLine).toHaveBeenCalledWith('ktlint extension is now active');
+        expect(mockOutputChannel.appendLine).toHaveBeenCalledWith('Ktlint extension is now active');
         expect(mockDiagnosticCollection.clear).toHaveBeenCalled();
     }, 30000);
 
